@@ -1,201 +1,342 @@
 export const level1 = [
-  {
-    id: 1,
-    type: "multiple-choice",
+ {
+  id: 1,
+  ref: "1.1",
+  title: "The Opening Question",
 
+  story:
+    "Dhritarashtra cannot see the battlefield himself. As the armies gather at Kurukshetra, he asks Sanjaya what is happening.",
+
+  meaning:
+    "Dhritarashtra asks Sanjaya to describe what his sons and the sons of Pandu are doing on the battlefield of Kurukshetra.",
+
+  teaching:
+    "The Gita begins with a question. Before we understand the battle, we are invited to notice the perspective from which the question is being asked.",
+
+  apply:
+    "When facing a difficult situation, pause and ask: What am I assuming before I truly understand what is happening?",
+
+  lines: [
+    {
+      text:
+        "dhṛtarāṣṭra uvāca",
+      words: [
+        { s: "dhṛtarāṣṭraḥ", g: "Dhritarashtra" },
+        { s: "uvāca", g: "said" },
+      ],
+    },
+    {
+      text:
+        "dharma-kṣetre kuru-kṣetre samavetā yuyutsavaḥ",
+      words: [
+        { s: "dharma-kṣetre", g: "in the field of dharma" },
+        { s: "kuru-kṣetre", g: "in Kurukshetra" },
+        { s: "samavetāḥ", g: "assembled together" },
+        { s: "yuyutsavaḥ", g: "desiring to fight" },
+      ],
+    },
+    {
+      text:
+        "māmakāḥ pāṇḍavāś caiva kim akurvata sañjaya",
+      words: [
+        { s: "māmakāḥ", g: "my sons" },
+        { s: "pāṇḍavāḥ", g: "the sons of Pandu" },
+        { s: "ca", g: "and" },
+        { s: "eva", g: "indeed" },
+        { s: "kim", g: "what" },
+        { s: "akurvata", g: "did they do" },
+        { s: "sañjaya", g: "O Sanjaya" },
+      ],
+    },
+  ],
+
+  proTip:
+    "Words ending in -e like kṣetre can show location: 'in' or 'at' a place. Think: where?",
+
+  test: {
     question:
-      "Why does Arjuna ask Krishna to place their chariot between the two armies?",
-
+      "Who asks Sanjaya what is happening on the battlefield?",
     options: [
-      "To see who he must fight",
-      "To challenge the opposing army",
-      "To escape from the battlefield",
-      "To speak to Duryodhana",
+      "Arjuna",
+      "Dhritarashtra",
+      "Duryodhana",
+      "Krishna",
     ],
-
-    correctAnswer: "To see who he must fight",
-
+    correctAnswer: "Dhritarashtra",
     explanation:
-      "Before the battle begins, Arjuna wants to see the people gathered on both sides. What he sees becomes the source of his inner conflict.",
+      "The Bhagavad Gita opens with Dhritarashtra asking Sanjaya what is happening at Kurukshetra.",
   },
+},
 
   {
     id: 2,
-    type: "fill-blank",
+    ref: "1.2",
+    title: "The Army Arrayed",
 
-    question:
-      "The battlefield where the Bhagavad Gita takes place is called _____.",
+    story:
+      "Sanjaya begins his account. Duryodhana sees the Pandava army arranged for battle and immediately goes to his teacher, Drona.",
 
-    options: ["Mathura", "Kurukshetra", "Ayodhya", "Dwarka"],
+    teaching:
+      "Before the battle begins, Duryodhana is already measuring the situation. What he sees immediately shapes how he responds.",
 
-    correctAnswer: "Kurukshetra",
+    apply:
+      "Notice the moment you begin comparing yourself with others. What story does your mind start telling?",
 
-    explanation:
-      "Kurukshetra is the battlefield where the conversation between Krishna and Arjuna takes place.",
+    meaning:
+      "Duryodhana sees the Pandava army arranged in battle formation and approaches Drona to speak about it.",
+
+    lines: [
+      {
+        text: "dṛṣṭvā tu pāṇḍavānīkaṁ vyūḍhaṁ duryodhanas tadā",
+        words: [
+          { s: "dṛṣṭvā", g: "having seen" },
+          { s: "pāṇḍava-anīkam", g: "the Pandava army" },
+          { s: "vyūḍham", g: "arranged in formation" },
+          { s: "duryodhanaḥ", g: "Duryodhana" },
+        ],
+      },
+      {
+        text: "ācāryam upasaṅgamya rājā vacanam abravīt",
+        words: [
+          { s: "ācāryam", g: "the teacher" },
+          { s: "upasaṅgamya", g: "having approached" },
+          { s: "rājā", g: "the king" },
+          { s: "vacanam", g: "words" },
+          { s: "abravīt", g: "spoke" },
+        ],
+      },
+    ],
   },
 
   {
     id: 3,
-    type: "multiple-choice",
+    ref: "1.3",
+    title: "Look at Them",
 
-    question:
-      "When Arjuna looks across the battlefield, what affects him most?",
+    story:
+      "Duryodhana points Drona toward the Pandava army. He draws attention to its formation and to the fact that it has been arranged by a capable warrior.",
 
-    options: [
-      "The size of the opposing army",
-      "Seeing relatives, teachers and people he respects",
-      "Losing his weapons",
-      "Not knowing where the battle will happen",
+    teaching:
+      "Attention can become strategy. What we choose to focus on determines what begins to feel threatening.",
+
+    apply:
+      "When something feels intimidating, ask yourself: am I seeing the whole picture or only what scares me?",
+
+    meaning:
+      "Duryodhana tells Drona to look at the mighty Pandava army, arranged by the son of Drupada.",
+
+    lines: [
+      {
+        text: "paśyaitāṁ pāṇḍu-putrāṇām ācārya mahatīṁ camūm",
+        words: [
+          { s: "paśya", g: "look" },
+          { s: "etām", g: "at this" },
+          { s: "pāṇḍu-putrāṇām", g: "of the sons of Pandu" },
+          { s: "ācārya", g: "O teacher" },
+          { s: "mahatīm", g: "great" },
+          { s: "camūm", g: "army" },
+        ],
+      },
+      {
+        text: "vyūḍhāṁ drupada-putreṇa tava śiṣyeṇa dhīmatā",
+        words: [
+          { s: "vyūḍhām", g: "arranged" },
+          { s: "drupada-putreṇa", g: "by the son of Drupada" },
+          { s: "tava", g: "your" },
+          { s: "śiṣyeṇa", g: "disciple" },
+          { s: "dhīmatā", g: "the intelligent one" },
+        ],
+      },
     ],
-
-    correctAnswer:
-      "Seeing relatives, teachers and people he respects",
-
-    explanation:
-      "Arjuna recognizes people he loves and respects among those he may have to fight. This creates his emotional and moral conflict.",
   },
 
   {
     id: 4,
-    type: "tap-order",
+    ref: "1.4–1.6",
+    title: "Counting the Opponents",
 
-    question: "Put these moments in the order they happen.",
+    story:
+      "Duryodhana begins listing the great warriors fighting for the Pandavas. One by one, powerful names enter the scene.",
 
-    options: [
-      "Arjuna turns to Krishna for guidance",
-      "Arjuna sees his relatives and teachers",
-      "Arjuna becomes overwhelmed by conflict",
+    teaching:
+      "Fear often starts counting. It measures strengths, threats and advantages until everything begins to look overwhelming.",
+
+    apply:
+      "Catch yourself when your mind starts making a list of everything that could go wrong.",
+
+    meaning:
+      "Duryodhana names powerful Pandava warriors, including Bhima, Arjuna, Yuyudhana, Virata, Drupada, Abhimanyu and the sons of Draupadi.",
+
+    lines: [
+      {
+        text: "atra śūrā maheṣv-āsā bhīmārjuna-samā yudhi",
+        words: [
+          { s: "atra", g: "here" },
+          { s: "śūrāḥ", g: "heroes" },
+          { s: "maheṣv-āsāḥ", g: "great bowmen" },
+          { s: "bhīma-arjuna-samāḥ", g: "equal to Bhima and Arjuna" },
+          { s: "yudhi", g: "in battle" },
+        ],
+      },
+      {
+        text: "yuyudhāno virāṭaś ca drupadaś ca mahā-rathaḥ",
+        words: [
+          { s: "yuyudhānaḥ", g: "Yuyudhana" },
+          { s: "virāṭaḥ", g: "Virata" },
+          { s: "drupadaḥ", g: "Drupada" },
+          { s: "mahā-rathaḥ", g: "great chariot warrior" },
+        ],
+      },
     ],
-
-    correctAnswer: [
-      "Arjuna sees his relatives and teachers",
-      "Arjuna becomes overwhelmed by conflict",
-      "Arjuna turns to Krishna for guidance",
-    ],
-
-    explanation:
-      "Seeing the people he loves leads Arjuna into emotional conflict, which eventually leads him to seek Krishna's guidance.",
   },
 
   {
     id: 5,
-    type: "match-pairs",
+    ref: "1.7",
+    title: "Our Side Too",
 
-    question: "Match each person or place with its role in the story.",
+    story:
+      "After counting the warriors on the other side, Duryodhana turns to his own army. He now begins naming the leaders who stand with him.",
 
-    pairs: [
+    teaching:
+      "After counting enemies, he counts friends aloud. Confidence that needs constant reassurance can sometimes hide anxiety.",
+
+    apply:
+      "Real confidence does not always need a speech. Notice when you are seeking reassurance because you feel uncertain.",
+
+    meaning:
+      "Duryodhana asks Drona to hear about the distinguished leaders of the Kaurava army.",
+
+    lines: [
       {
-        left: "Arjuna",
-        right: "The warrior facing an inner conflict",
+        text: "asmākaṁ tu viśiṣṭā ye tān nibodha dvijottama",
+        words: [
+          { s: "asmākam", g: "our" },
+          { s: "viśiṣṭāḥ", g: "distinguished" },
+          { s: "tān", g: "them" },
+          { s: "nibodha", g: "know / hear of" },
+          { s: "dvijottama", g: "O best of the twice-born" },
+        ],
       },
       {
-        left: "Krishna",
-        right: "Arjuna's charioteer and guide",
-      },
-      {
-        left: "Kurukshetra",
-        right: "The battlefield",
+        text: "nāyakā mama sainyasya saṁjñārthaṁ tān bravīmi te",
+        words: [
+          { s: "nāyakāḥ", g: "leaders" },
+          { s: "mama", g: "my" },
+          { s: "sainyasya", g: "of the army" },
+          { s: "bravīmi", g: "I speak / name" },
+          { s: "te", g: "to you" },
+        ],
       },
     ],
-
-    explanation:
-      "Arjuna faces a difficult decision, Krishna guides him, and their conversation unfolds on the battlefield of Kurukshetra.",
   },
 
   {
     id: 6,
-    type: "scenario",
+    ref: "1.8",
+    title: "The Champions of the Kauravas",
 
-    question:
-      "Imagine you must make a difficult decision that may hurt people you care about, even though you believe it is your responsibility. What is most similar to Arjuna's situation?",
+    story:
+      "Bhishma, Drona, Karna and others are named. Duryodhana surrounds himself, in words, with the strength of powerful figures.",
 
-    options: [
-      "Both involve a conflict between duty and personal relationships",
-      "Both involve forgetting how to do something",
-      "Both involve preparing for a competition",
-      "Both involve trying to escape from danger",
+    teaching:
+      "People sometimes seek safety by surrounding themselves with powerful names, titles and allies.",
+
+    apply:
+      "Know the difference between being supported by others and using them as a shield against your own fear.",
+
+    meaning:
+      "Duryodhana names the great warriors fighting on the Kaurava side, including Drona, Bhishma, Karna and Kripa.",
+
+    lines: [
+      {
+        text: "bhavān bhīṣmaś ca karṇaś ca kṛpaś ca samitiñjayaḥ",
+        words: [
+          { s: "bhavān", g: "you" },
+          { s: "bhīṣmaḥ", g: "Bhishma" },
+          { s: "karṇaḥ", g: "Karna" },
+          { s: "kṛpaḥ", g: "Kripa" },
+          { s: "samitiñjayaḥ", g: "victorious in battle" },
+        ],
+      },
+      {
+        text: "aśvatthāmā vikarṇaś ca saumadattis tathaiva ca",
+        words: [
+          { s: "aśvatthāmā", g: "Ashvatthama" },
+          { s: "vikarṇaḥ", g: "Vikarna" },
+          { s: "saumadattiḥ", g: "the son of Somadatta" },
+        ],
+      },
     ],
-
-    correctAnswer:
-      "Both involve a conflict between duty and personal relationships",
-
-    explanation:
-      "Arjuna's struggle is not simply about fear. He feels torn between his duty as a warrior and the consequences of fighting people he loves.",
   },
 
   {
     id: 7,
-    type: "multiple-choice",
+    ref: "1.9",
+    title: "Ready to Give Their Lives",
 
-    question: "What is Arjuna's real dilemma?",
+    story:
+      "Duryodhana continues. Many more warriors stand ready for his cause, prepared to risk their lives in battle.",
 
-    options: [
-      "He wants to become a better warrior",
-      "He is unsure whether fighting is morally right",
-      "He cannot decide which weapon to use",
-      "He wants to leave the kingdom",
+    teaching:
+      "Once people become part of a conflict, individuals can disappear behind the cause they are serving.",
+
+    apply:
+      "Remember the human being behind every side, role and label.",
+
+    meaning:
+      "Duryodhana says that many other heroes are ready to give up their lives for his sake and are skilled in many kinds of weapons.",
+
+    lines: [
+      {
+        text: "anye ca bahavaḥ śūrā mad-arthe tyakta-jīvitāḥ",
+        words: [
+          { s: "anye", g: "others" },
+          { s: "bahavaḥ", g: "many" },
+          { s: "śūrāḥ", g: "heroes" },
+          { s: "mad-arthe", g: "for my sake" },
+          { s: "tyakta-jīvitāḥ", g: "ready to give up their lives" },
+        ],
+      },
     ],
-
-    correctAnswer:
-      "He is unsure whether fighting is morally right",
-
-    explanation:
-      "Arjuna is already a skilled warrior. His struggle is deeper: he questions whether fulfilling his duty is worth the suffering it may cause.",
   },
 
   {
     id: 8,
-    type: "fill-blank",
+    ref: "1.10",
+    title: "Enough or Not Enough?",
 
-    question:
-      "Arjuna turns to _____ when his inner conflict becomes overwhelming.",
+    story:
+      "Duryodhana makes his final comparison. He measures the strength of both armies and declares his own side protected by Bhishma.",
 
-    options: ["Bhishma", "Duryodhana", "Krishna", "Sanjaya"],
+    teaching:
+      "Comparison rarely ends with certainty. Even after counting strengths, the mind can still ask: is this enough?",
 
-    correctAnswer: "Krishna",
+    apply:
+      "When you keep comparing, notice whether the comparison is actually giving you clarity—or feeding your anxiety.",
 
-    explanation:
-      "Krishna is beside Arjuna as his charioteer. As Arjuna's crisis deepens, Krishna becomes his guide and teacher.",
-  },
+    meaning:
+      "Duryodhana compares the two armies, describing his own force as protected by Bhishma and the Pandava force as protected by Bhima.",
 
-  {
-    id: 9,
-    type: "multiple-choice",
-
-    question:
-      "At the beginning of the Gita, Krishna is seated beside Arjuna as his...",
-
-    options: [
-      "Teacher",
-      "King",
-      "Charioteer",
-      "Opponent",
+    lines: [
+      {
+        text: "aparyāptaṁ tad asmākaṁ balaṁ bhīṣmābhirakṣitam",
+        words: [
+          { s: "aparyāptam", g: "not sufficient / unlimited" },
+          { s: "asmākam", g: "our" },
+          { s: "balam", g: "strength / army" },
+          { s: "bhīṣma-abhirakṣitam", g: "protected by Bhishma" },
+        ],
+      },
+      {
+        text: "paryāptaṁ tv idam eteṣāṁ balaṁ bhīmābhirakṣitam",
+        words: [
+          { s: "paryāptam", g: "sufficient / limited" },
+          { s: "eteṣām", g: "of theirs" },
+          { s: "balam", g: "strength / army" },
+          { s: "bhīma-abhirakṣitam", g: "protected by Bhima" },
+        ],
+      },
     ],
-
-    correctAnswer: "Charioteer",
-
-    explanation:
-      "Krishna initially serves as Arjuna's charioteer. Their conversation later develops into Krishna's spiritual guidance.",
-  },
-
-  {
-    id: 10,
-    type: "multiple-choice",
-
-    question:
-      "What does Chapter 1 mainly set up for the rest of the Bhagavad Gita?",
-
-    options: [
-      "A detailed strategy for winning the war",
-      "Arjuna's search for spiritual and moral guidance",
-      "A competition between warriors",
-      "The history of the Pandavas",
-    ],
-
-    correctAnswer:
-      "Arjuna's search for spiritual and moral guidance",
-
-    explanation:
-      "Chapter 1 establishes Arjuna's crisis. The rest of the Bhagavad Gita grows from his search for clarity about duty, action and the right way to live.",
   },
 ];

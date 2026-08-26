@@ -448,3 +448,935 @@
   font-size: 14px;
   font-weight: 700;
 }
+
+/* ========================================
+   CLAUDE-STYLE LEARNING FLOW
+======================================== */
+
+.close {
+  text-decoration: none;
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.counter {
+  min-width: 38px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--purple);
+  text-align: right;
+}
+
+.verseMeta {
+  margin-bottom: 8px;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+
+  color: var(--saffron);
+}
+
+.lessonCard {
+  margin-top: 28px;
+  padding: 22px 18px;
+
+  border: 2px solid #ded6ca;
+  border-radius: 16px;
+
+  background: var(--surface);
+}
+
+.lessonLabel {
+  display: block;
+  margin-bottom: 14px;
+
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+
+  color: var(--purple);
+}
+
+.lessonText {
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--text);
+}
+
+/* ========================================
+   SANSKRIT SCREEN
+======================================== */
+
+.sanskritSection {
+  margin-top: 28px;
+}
+
+.sanskritLine {
+  margin-top: 20px;
+  padding: 18px;
+
+  border: 2px solid #ded6ca;
+  border-radius: 16px;
+
+  background: var(--surface);
+}
+
+.sanskritText {
+  font-size: 19px;
+  line-height: 1.6;
+  font-weight: 700;
+
+  color: var(--purple);
+}
+
+.wordList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  margin-top: 18px;
+}
+
+.wordButton {
+  padding: 9px 12px;
+
+  border: 2px solid #ded6ca;
+  border-radius: 10px;
+
+  background: #fff;
+  color: var(--text);
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.wordButton:active {
+  transform: scale(0.97);
+}
+
+.wordSelected {
+  border-color: var(--purple);
+  background: #f0e8f7;
+  color: var(--purple);
+}
+
+.wordMeaning {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  margin-top: 14px;
+  padding: 14px;
+
+  border-radius: 12px;
+
+  background: var(--purple);
+  color: white;
+}
+
+.wordMeaning strong {
+  font-size: 14px;
+}
+
+.wordMeaning span {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* ========================================
+   BOTTOM AREA
+======================================== */
+
+.stepLabel {
+  margin-bottom: 10px;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.footer {
+  margin-top: 40px;
+  padding-bottom: 20px;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  min-height: 52px;
+
+  border: none;
+  border-radius: 14px;
+
+  background: var(--purple);
+  color: white;
+
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.actionButton:active {
+  transform: translateY(2px);
+}
+
+.game {
+  min-height: 100vh;
+  max-width: 430px;
+  margin: 0 auto;
+  padding: 16px 16px 28px;
+  background: var(--bg);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.close {
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  background: var(--surface);
+
+  color: var(--text);
+  text-decoration: none;
+
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.progressTrack {
+  flex: 1;
+  height: 10px;
+
+  overflow: hidden;
+  border-radius: 999px;
+
+  background: #e4ddd3;
+}
+
+.progress {
+  height: 100%;
+  border-radius: inherit;
+
+  background: var(--purple);
+  transition: width 0.3s ease;
+}
+
+.gameStats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hearts {
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.counter {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--purple);
+  white-space: nowrap;
+}
+
+.content {
+  width: 100%;
+}
+
+.sectionPill {
+  display: inline-flex;
+  align-items: center;
+
+  margin-bottom: 10px;
+  padding: 7px 10px;
+
+  border-radius: 999px;
+
+  background: var(--gold-light);
+  color: var(--purple-dark);
+
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.screenType {
+  margin-bottom: 8px;
+
+  color: var(--saffron);
+
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.content h1 {
+  max-width: 340px;
+
+  font-size: 27px;
+  line-height: 1.15;
+
+  color: var(--text);
+}
+
+/* MAIN LEARNING BOXES */
+
+.storyBox,
+.teachingBox,
+.applyBox,
+.meaningBox,
+.verseBox,
+.feedbackBox {
+  width: 100%;
+  margin-top: 20px;
+
+  border-radius: 18px;
+}
+
+.storyBox {
+  padding: 22px;
+
+  background: var(--surface);
+  border: 2px solid #ded6ca;
+  box-shadow: 0 4px 0 #ded6ca;
+}
+
+.boxIcon {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 14px;
+
+  border-radius: 14px;
+  background: var(--purple);
+
+  font-size: 21px;
+}
+
+.storyBox p,
+.teachingBox p,
+.applyBox p,
+.meaningBox p,
+.feedbackBox p {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.teachingBox {
+  padding: 18px;
+
+  background: #eee3f7;
+  border: 2px solid #d7c2e8;
+}
+
+.applyBox {
+  padding: 18px;
+
+  background: var(--gold-light);
+  border: 2px solid #e5c35e;
+}
+
+.meaningBox {
+  padding: 18px;
+
+  background: var(--blue-light);
+  border: 2px solid #c3d6e5;
+}
+
+.teachingBox span,
+.applyBox span,
+.meaningBox span {
+  display: block;
+  margin-bottom: 8px;
+
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+
+  color: var(--purple);
+}
+
+/* SANSKRIT BOX */
+
+.verseBox {
+  padding: 20px;
+
+  background: var(--surface);
+  border: 2px solid #ded6ca;
+  box-shadow: 0 4px 0 #ded6ca;
+}
+
+.sanskritText {
+  color: var(--purple);
+
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.tapHint {
+  margin-top: 12px;
+
+  color: var(--text-muted);
+
+  font-size: 12px;
+}
+
+.wordGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  margin-top: 16px;
+}
+
+.wordButton {
+  padding: 9px 11px;
+
+  border: 2px solid #ded6ca;
+  border-radius: 10px;
+
+  background: white;
+  color: var(--text);
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.wordButton:active {
+  transform: translateY(2px);
+}
+
+.wordSelected {
+  border-color: var(--purple);
+  background: #eee3f7;
+  color: var(--purple);
+}
+
+.wordMeaning {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  margin-top: 14px;
+  padding: 14px;
+
+  border-radius: 12px;
+
+  background: var(--purple);
+  color: white;
+}
+
+.wordMeaning strong {
+  font-size: 14px;
+}
+
+.wordMeaning span {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* GAME OPTIONS */
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+
+  margin-top: 28px;
+}
+
+.option {
+  width: 100%;
+  min-height: 58px;
+  padding: 14px 16px;
+
+  border: 2px solid #ded6ca;
+  border-radius: 14px;
+
+  background: var(--surface);
+  color: var(--text);
+
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.option:active {
+  transform: translateY(2px);
+}
+
+.selected {
+  border-color: var(--purple);
+  background: #eee3f7;
+}
+
+.correct {
+  border-color: #4f9b63;
+  background: #e4f4e8;
+}
+
+.wrong {
+  border-color: #d45b5b;
+  background: #fbe8e8;
+}
+
+/* BUTTON */
+
+.actionButton {
+  width: 100%;
+  min-height: 54px;
+
+  margin-top: 24px;
+
+  border: none;
+  border-radius: 14px;
+
+  background: var(--purple);
+  color: white;
+
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--purple-dark);
+}
+
+.actionButton:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--purple-dark);
+}
+
+.actionButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* FEEDBACK */
+
+.feedbackBox {
+  padding: 20px;
+}
+
+.feedbackBox h2 {
+  font-size: 23px;
+}
+
+.feedbackBox .actionButton {
+  margin-top: 18px;
+}
+
+.correctFeedback {
+  background: #e4f4e8;
+  border: 2px solid #4f9b63;
+}
+
+.wrongFeedback {
+  background: #fbe8e8;
+  border: 2px solid #d45b5b;
+}
+
+/* COMPLETE */
+
+.completeScreen {
+  min-height: 90vh;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+}
+
+.completeIcon {
+  font-size: 70px;
+}
+
+.completeLabel {
+  margin-top: 18px;
+
+  color: var(--purple);
+
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.completeScreen h1 {
+  margin-top: 10px;
+
+  font-size: 31px;
+}
+
+.completeText {
+  margin-top: 12px;
+
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.scoreCard {
+  width: 100%;
+
+  margin-top: 28px;
+  padding: 22px;
+
+  border: 2px solid #ded6ca;
+  border-radius: 18px;
+
+  background: var(--surface);
+}
+
+.scoreCard span {
+  display: block;
+
+  font-size: 13px;
+}
+
+.scoreCard strong {
+  display: block;
+  margin-top: 6px;
+
+  color: var(--purple);
+
+  font-size: 42px;
+}
+
+.completeButton {
+  width: 100%;
+  min-height: 54px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-top: 22px;
+
+  border-radius: 14px;
+
+  background: var(--purple);
+  color: white;
+
+  font-size: 14px;
+  font-weight: 900;
+  text-decoration: none;
+
+  box-shadow: 0 4px 0 var(--purple-dark);
+}
+
+/* REBUILD MEANING CARDS */
+/* ================= REBUILD MEANING CARDS ================= */
+
+/* ================= ENGLISH MEANING WORDS ================= */
+
+.options {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+
+  width: 100%;
+  margin-top: 28px;
+}
+
+/* EXACTLY like Sanskrit word buttons, but gold */
+.option {
+  display: inline-flex;
+  flex: 0 0 auto;
+
+  width: fit-content !important;
+  min-width: 0;
+  max-width: 100%;
+
+  min-height: 0;
+  padding: 10px 14px;
+
+  border: 2px solid #e2c985;
+  border-radius: 12px;
+
+  background: #fff5d7;
+  color: #b7791f;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+
+  text-align: center;
+  white-space: nowrap;
+
+  box-shadow: 0 4px 0 rgba(180, 122, 22, 0.12);
+
+  cursor: pointer;
+}
+
+/* Selected English meaning */
+.option.selected {
+  background: #f3d586;
+  border-color: #c58a20;
+  color: #7d4f08;
+
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 rgba(180, 122, 22, 0.12);
+}
+
+/* Sanskrit has been placed into this English meaning */
+.option.filledMeaning {
+  flex-direction: column;
+  align-items: center;
+
+  background: #d9a63b;
+  border-color: #a96d0d;
+  color: #563705;
+
+  white-space: normal;
+}
+
+/* English text */
+.option strong {
+  display: block;
+  color: inherit;
+  font-size: 14px;
+}
+
+/* Sanskrit answer */
+.option span {
+  display: block;
+  margin-top: 4px;
+
+  color: #563705;
+
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* Hover */
+.option:hover:not(:disabled) {
+  border-color: #c58a20;
+  background: #fff0c6;
+}
+
+/* Filled card should stay dark gold on hover */
+.option.filledMeaning:hover:not(:disabled) {
+  background: #d9a63b;
+  border-color: #a96d0d;
+}
+
+/* ================= REBUILD MEANING PAIRS ================= */
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+
+  width: 100%;
+  margin-top: 28px;
+}
+
+/* English meaning card */
+.option {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+
+  width: auto !important;
+  min-width: 0;
+  min-height: 0;
+
+  padding: 10px 16px;
+
+  border: 2px solid #dfc27a;
+  border-radius: 14px;
+
+  background: #fff6dc;
+  color: #a66f18;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.25;
+
+  text-align: center;
+
+  box-shadow: 0 4px 0 rgba(160, 110, 20, 0.12);
+
+  cursor: pointer;
+}
+
+/* English text */
+.englishMeaning {
+  display: block;
+  white-space: nowrap;
+}
+
+/* Selected meaning */
+.option.selected {
+  background: #f4d98e;
+  border-color: #bd8520;
+  color: #774b08;
+}
+
+/*
+  When Sanskrit is chosen,
+  it lands BELOW the English meaning
+*/
+.option.filledMeaning {
+  padding-bottom: 9px;
+
+  background: #efd48d;
+  border-color: #bd8520;
+}
+
+/* Sanskrit word landed under meaning */
+.landedSanskrit {
+  display: block;
+
+  width: 100%;
+  margin-top: 8px;
+  padding-top: 7px;
+
+  border-top: 1px solid rgba(125, 79, 8, 0.22);
+
+  color: #7a4d08;
+
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+
+  white-space: nowrap;
+}
+
+/* ================= SANSKRIT CHOICES BELOW ================= */
+
+.wordGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  width: 100%;
+  margin-top: 28px;
+}
+
+.wordButton {
+  flex: 0 0 auto;
+
+  width: auto;
+  min-height: 0;
+
+  padding: 10px 14px;
+
+  border: 2px solid #ded6ca;
+  border-radius: 12px;
+
+  background: var(--surface);
+  color: var(--text);
+
+  font-size: 14px;
+  font-weight: 700;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+}
+
+/* Sanskrit choice already used */
+.matchedWord {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ================= CORRECT ANSWER ================= */
+
+.correctMeaning {
+  background: #dff2df !important;
+  border-color: #74b77a !important;
+  color: #2f7136 !important;
+
+  box-shadow:
+    0 4px 0 rgba(47, 113, 54, 0.12);
+}
+
+.correctMeaning .landedSanskrit {
+  color: #27652e;
+  border-top-color: rgba(47, 113, 54, 0.2);
+}
+
+/* ================= WRONG ANSWER ================= */
+
+.wrongMeaning {
+  background: #ffe1df !important;
+  border-color: #df7068 !important;
+  color: #a63f39 !important;
+
+  animation: wrongWiggle 0.55s ease-in-out;
+}
+
+.wrongMeaning .landedSanskrit {
+  color: #a63f39;
+  border-top-color: rgba(166, 63, 57, 0.2);
+}
+
+/* ================= WIGGLE ================= */
+
+@keyframes wrongWiggle {
+  0% {
+    transform: translateX(0);
+  }
+
+  20% {
+    transform: translateX(-6px);
+  }
+
+  40% {
+    transform: translateX(6px);
+  }
+
+  60% {
+    transform: translateX(-4px);
+  }
+
+  80% {
+    transform: translateX(4px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}

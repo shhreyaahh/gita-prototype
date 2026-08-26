@@ -1,188 +1,438 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import styles from "./page.module.css";
 import { level1 } from "../../../data/level1";
 
+type Word = {
+  s: string;
+  g: string;
+  fn?: number;
+};
+
+type RawLine = {
+  text?: string;
+  words?: Word[];
+  t?: string;
+  ws?: Word[];
+};
+
+type Lesson = {
+  id: number;
+  ref: string;
+  title: string;
+  story: string;
+  meaning: string;
+  teaching?: string;
+  apply?: string;
+  proTip?: string;
+
+  lines: RawLine[];
+
+  test?: {
+    question: string;
+    options: string[];
+    correctAnswer: string;
+    explanation: string;
+  };
+};
+
+type Screen =
+  | "story"
+  | "line"
+  | "tip"
+  | "rebuild"
+  | "feedback"
+  | "complete";
+
 export default function LevelOnePage() {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [selectedOrder, setSelectedOrder] = useState<string[]>([]);
-  const [selectedBlanks, setSelectedBlanks] = useState<string[]>([]);
-  const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
-  const [matches, setMatches] = useState<Record<string, string>>({});
-  const [checked, setChecked] = useState(false);
+  const lessons = level1 as Lesson[];
 
-  const [score, setScore] = useState(0);
+  const [lessonIndex, setLessonIndex] = useState(0);
+  const [screen, setScreen] = useState<Screen>("story");
+
+  const [lineIndex, setLineIndex] = useState(0);
+
+  const [selectedWord, setSelectedWord] =
+    useState<Word | null>(null);
+
   const [hearts, setHearts] = useState(10);
-  const [gameOver, setGameOver] = useState(false);
-  const [completed, setCompleted] = useState(false);
+  const [score, setScore] = useState(0);
 
-  const currentQuestion = level1[currentStep];
+  const [rebuildPart, setRebuildPart] = useState(0);
 
-  const handleAnswer = (answer: string) => {
-    if (!checked) {
-      setSelectedAnswer(answer);
-    }
-  };
+  const [selectedMeaningIndex, setSelectedMeaningIndex] =
+    useState<number | null>(null);
 
-  const handleOrderAnswer = (answer: string) => {
-    if (!checked && !selectedOrder.includes(answer)) {
-      setSelectedOrder([...selectedOrder, answer]);
-    }
-  };
+  const [rebuildAnswers, setRebuildAnswers] = useState<
+    (string | null)[]
+  >([]);
 
-  const handleMultiBlankAnswer = (answer: string) => {
-    if (!checked && !selectedBlanks.includes(answer)) {
-      setSelectedBlanks([...selectedBlanks, answer]);
-    }
-  };
+  const [lockedAnswers, setLockedAnswers] = useState<
+    Set<number>
+  >(new Set());
 
-  const handleMatch = (right: string) => {
-    if (!selectedLeft || checked) return;
+  const [wrongAnswers, setWrongAnswers] = useState<
+    Set<number>
+  >(new Set());
 
-    const rightAlreadyUsed = Object.values(matches).includes(right);
+  const [lastAnswerCorrect, setLastAnswerCorrect] =
+    useState(false);
 
-    if (rightAlreadyUsed) return;
+  const lesson = lessons[lessonIndex];
 
-    setMatches((previousMatches) => ({
-      ...previousMatches,
-      [selectedLeft]: right,
-    }));
+  const lines = (lesson?.lines ?? []).map((line) => ({
+    text: line.text ?? line.t ?? "",
+    words: line.words ?? line.ws ?? [],
+  }));
 
-    setSelectedLeft(null);
-  };
+  const currentLine = lines[lineIndex];
 
-  const handleCheck = () => {
-    if (currentQuestion.type === "tap-order") {
-      if (selectedOrder.length !== currentQuestion.options!.length) return;
-    }
+  const verseWords = useMemo(() => {
+    return lines.flatMap((line) => line.words);
+  }, [lessonIndex]);
 
-    if (currentQuestion.type === "multi-blank") {
-      if (selectedBlanks.length !== (currentQuestion.correctAnswer as string[]).length) return;
-    }
+  const rebuildParts = useMemo(() => {
+    if (verseWords.length === 0) return [];
 
-    if (currentQuestion.type === "match-pairs") {
-      if (Object.keys(matches).length !== currentQuestion.pairs!.length) return;
-    }
+    const splitPoint = Math.ceil(
+      verseWords.length / 2
+    );
 
-    if (
-      currentQuestion.type !== "tap-order" &&
-      currentQuestion.type !== "multi-blank" &&
-      currentQuestion.type !== "match-pairs" &&
-      !selectedAnswer
-    ) {
-      return;
-    }
+    return [
+      verseWords.slice(0, splitPoint),
+      verseWords.slice(splitPoint),
+    ].filter((part) => part.length > 0);
+  }, [verseWords]);
 
-    setChecked(true);
+  const currentRebuildWords =
+    rebuildParts[rebuildPart] ?? [];
 
-    if (isCorrect()) {
-      setScore((previousScore) => previousScore + 1);
+  const shuffledOptions = useMemo(() => {
+    return [...currentRebuildWords].sort(
+      () => Math.random() - 0.5
+    );
+  }, [lessonIndex, rebuildPart]);
+
+  const totalSteps = lessons.reduce(
+    (total, item) => {
+      return total + item.lines.length + 4;
+    },
+    0
+  );
+
+  const completedBefore = lessons
+    .slice(0, lessonIndex)
+    .reduce((total, item) => {
+      return total + item.lines.length + 4;
+    }, 0);
+
+  let currentStep = completedBefore;
+
+  if (screen === "story") {
+    currentStep += 1;
+  }
+
+  if (screen === "line") {
+    currentStep += 1 + lineIndex;
+  }
+
+  if (screen === "tip") {
+    currentStep += 1 + lines.length;
+  }
+
+  if (screen === "rebuild") {
+    currentStep +=
+      2 + lines.length + rebuildPart;
+  }
+
+  if (screen === "feedback") {
+    currentStep +=
+      3 + lines.length;
+  }
+
+  const progress =
+    totalSteps > 0
+      ? Math.min(
+          (currentStep / totalSteps) * 100,
+          100
+        )
+      : 0;
+
+  function handleContinueStory() {
+    setLineIndex(0);
+    setSelectedWord(null);
+
+    if (lines.length > 0) {
+      setScreen("line");
     } else {
-      setHearts((previousHearts) => {
-        const newHearts = previousHearts - 1;
-
-        if (newHearts <= 0) {
-          setGameOver(true);
-        }
-
-        return newHearts;
-      });
+      setScreen("tip");
     }
-  };
+  }
 
-  const isCorrect = () => {
-    if (currentQuestion.type === "tap-order") {
-      return (
-        JSON.stringify(selectedOrder) ===
-        JSON.stringify(currentQuestion.correctAnswer)
-      );
-    }
+  function handleContinueLine() {
+    if (!selectedWord) return;
 
-    if (currentQuestion.type === "multi-blank") {
-      return (
-        JSON.stringify(selectedBlanks) ===
-        JSON.stringify(currentQuestion.correctAnswer)
-      );
-    }
+    const isLastLine =
+      lineIndex >= lines.length - 1;
 
-    if (currentQuestion.type === "match-pairs") {
-      return currentQuestion.pairs!.every(
-        (pair: { left: string; right: string }) =>
-          matches[pair.left] === pair.right
-      );
-    }
-
-    return selectedAnswer === currentQuestion.correctAnswer;
-  };
-
-  const answerCorrect = isCorrect();
-
-  const handleNext = () => {
-    if (currentStep === level1.length - 1) {
-      localStorage.setItem("level1Completed", "true");
-      setCompleted(true);
+    if (isLastLine) {
+      setSelectedWord(null);
+      setScreen("tip");
       return;
     }
 
-    setCurrentStep((previousStep) => previousStep + 1);
-    setSelectedAnswer(null);
-    setSelectedOrder([]);
-    setSelectedBlanks([]);
-    setSelectedLeft(null);
-    setMatches({});
-    setChecked(false);
-  };
+    setLineIndex((previous) => previous + 1);
+    setSelectedWord(null);
+  }
 
-  if (gameOver) {
+  function startRebuild() {
+    setRebuildPart(0);
+
+    const firstPart = rebuildParts[0] ?? [];
+
+    setRebuildAnswers(
+      Array(firstPart.length).fill(null)
+    );
+
+    setLockedAnswers(new Set());
+    setWrongAnswers(new Set());
+
+    setSelectedMeaningIndex(null);
+
+    setLastAnswerCorrect(false);
+
+    setScreen("rebuild");
+  }
+
+  function handleMeaningClick(index: number) {
+    if (lockedAnswers.has(index)) return;
+
+    setSelectedMeaningIndex(index);
+  }
+
+  function handleSanskritClick(word: string) {
+    if (selectedMeaningIndex === null) return;
+
+    if (lockedAnswers.has(selectedMeaningIndex)) {
+      return;
+    }
+
+    setRebuildAnswers((previous) => {
+      const updated = [...previous];
+
+      /*
+        If this Sanskrit word was already placed
+        somewhere else incorrectly, remove it first.
+      */
+      const existingIndex =
+        updated.findIndex(
+          (answer) => answer === word
+        );
+
+      if (
+        existingIndex !== -1 &&
+        existingIndex !== selectedMeaningIndex &&
+        !lockedAnswers.has(existingIndex)
+      ) {
+        updated[existingIndex] = null;
+      }
+
+      updated[selectedMeaningIndex] = word;
+
+      return updated;
+    });
+
+    setSelectedMeaningIndex(null);
+  }
+
+  function handleCheckRebuild() {
+    const allAnswered =
+      rebuildAnswers.length ===
+        currentRebuildWords.length &&
+      rebuildAnswers.every(
+        (answer) => answer !== null
+      );
+
+    if (!allAnswered) return;
+
+    const correctIndexes = new Set<number>();
+    const wrongIndexes = new Set<number>();
+
+    currentRebuildWords.forEach(
+      (word, index) => {
+        if (rebuildAnswers[index] === word.s) {
+          correctIndexes.add(index);
+        } else {
+          wrongIndexes.add(index);
+        }
+      }
+    );
+
+    /*
+      EVERYTHING CORRECT
+    */
+    if (wrongIndexes.size === 0) {
+      setLockedAnswers(correctIndexes);
+      setWrongAnswers(new Set());
+
+      setSelectedMeaningIndex(null);
+
+      setScore((previous) => previous + 1);
+
+      setHearts((previous) =>
+        Math.min(previous + 1, 10)
+      );
+
+      setLastAnswerCorrect(true);
+
+      /*
+        Keep green state visible briefly
+        before feedback appears.
+      */
+      setTimeout(() => {
+        setScreen("feedback");
+      }, 700);
+
+      return;
+    }
+
+    /*
+      SOME ANSWERS ARE WRONG
+
+      Correct:
+      green + locked
+
+      Wrong:
+      red + wiggle
+    */
+    setLockedAnswers(correctIndexes);
+
+    setWrongAnswers(wrongIndexes);
+
+    setSelectedMeaningIndex(null);
+
+    setHearts((previous) =>
+      Math.max(previous - 1, 0)
+    );
+
+    /*
+      After animation, remove ONLY
+      the wrong Sanskrit answers.
+
+      Correct green pairs remain.
+    */
+    setTimeout(() => {
+      setRebuildAnswers((previous) =>
+        previous.map((answer, index) =>
+          wrongIndexes.has(index)
+            ? null
+            : answer
+        )
+      );
+
+      setWrongAnswers(new Set());
+    }, 650);
+  }
+
+  function moveToNextRebuildPart() {
+    const nextPart = rebuildPart + 1;
+
+    if (nextPart < rebuildParts.length) {
+      const nextWords =
+        rebuildParts[nextPart] ?? [];
+
+      setRebuildPart(nextPart);
+
+      setRebuildAnswers(
+        Array(nextWords.length).fill(null)
+      );
+
+      setLockedAnswers(new Set());
+      setWrongAnswers(new Set());
+
+      setSelectedMeaningIndex(null);
+
+      setLastAnswerCorrect(false);
+
+      setScreen("rebuild");
+
+      return;
+    }
+
+    handleNextVerse();
+  }
+
+  function handleNextVerse() {
+    const isLastLesson =
+      lessonIndex === lessons.length - 1;
+
+    if (isLastLesson) {
+      localStorage.setItem(
+        "level1Completed",
+        "true"
+      );
+
+      setScreen("complete");
+
+      return;
+    }
+
+    setLessonIndex((previous) => previous + 1);
+
+    setLineIndex(0);
+    setSelectedWord(null);
+
+    setRebuildPart(0);
+    setSelectedMeaningIndex(null);
+
+    setRebuildAnswers([]);
+
+    setLockedAnswers(new Set());
+    setWrongAnswers(new Set());
+
+    setLastAnswerCorrect(false);
+
+    setScreen("story");
+  }
+
+  if (!lesson) {
     return (
       <main className={styles.game}>
-        <section className={styles.completeScreen}>
-          <div className={styles.completeIcon}>🙏</div>
-
-          <p className={styles.completeLabel}>OUT OF HEARTS</p>
-
-          <h1>Take another shot</h1>
-
-          <p className={styles.completeText}>
-            Review what you learned and try Level 1 again.
-          </p>
-
-          <button
-            className={styles.actionButton}
-            onClick={() => window.location.reload()}
-          >
-            TRY AGAIN
-          </button>
-        </section>
+        <p>Lesson not found.</p>
       </main>
     );
   }
 
-  if (completed) {
+  if (screen === "complete") {
     return (
       <main className={styles.game}>
         <section className={styles.completeScreen}>
-          <div className={styles.completeIcon}>🏹</div>
+          <div className={styles.completeIcon}>
+            🏹
+          </div>
 
-          <p className={styles.completeLabel}>CHAPTER 1 COMPLETE</p>
+          <p className={styles.completeLabel}>
+            SECTION COMPLETE
+          </p>
 
-          <h1>Arjuna's Dilemma</h1>
+          <h1>Well done!</h1>
 
           <p className={styles.completeText}>
-            You completed your first step into the Bhagavad Gita.
+            You completed this section of Chapter 1.
           </p>
 
           <div className={styles.scoreCard}>
-            <span>Your score</span>
-            <strong>
-              {score}/{level1.length}
-            </strong>
+            <span>Correct rebuilds</span>
+
+            <strong>{score}</strong>
           </div>
 
-          <Link href="/" className={styles.completeButton}>
+          <Link
+            href="/"
+            className={styles.completeButton}
+          >
             CONTINUE JOURNEY
           </Link>
         </section>
@@ -193,7 +443,11 @@ export default function LevelOnePage() {
   return (
     <main className={styles.game}>
       <header className={styles.header}>
-        <Link href="/" className={styles.close}>
+        <Link
+          href="/"
+          className={styles.close}
+          aria-label="Close lesson"
+        >
           ✕
         </Link>
 
@@ -201,212 +455,418 @@ export default function LevelOnePage() {
           <div
             className={styles.progress}
             style={{
-              width: `${((currentStep + 1) / level1.length) * 100}%`,
+              width: `${progress}%`,
             }}
           />
         </div>
 
         <div className={styles.gameStats}>
-          <span className={styles.hearts}>❤️ {hearts}</span>
+          <span className={styles.hearts}>
+            ❤️ {hearts}
+          </span>
 
           <span className={styles.counter}>
-            {currentStep + 1}/{level1.length}
+            {lesson.ref}
           </span>
         </div>
       </header>
 
       <section className={styles.content}>
-        <h1>{currentQuestion.question}</h1>
+        {/* STORY */}
 
-        {currentQuestion.type === "fill-blank" && (
-          <div className={styles.blank}>
-            {selectedAnswer || " ‎ "}
-          </div>
+        {screen === "story" && (
+          <>
+            <div className={styles.sectionPill}>
+              VERSE {lesson.ref}
+            </div>
+
+            <p className={styles.screenType}>
+              LEARN
+            </p>
+
+            <h1>{lesson.title}</h1>
+
+            <div className={styles.storyBox}>
+              <div className={styles.boxIcon}>
+                📖
+              </div>
+
+              <p>{lesson.story}</p>
+            </div>
+
+            <div className={styles.meaningBox}>
+              <span>WHAT IT MEANS</span>
+
+              <p>{lesson.meaning}</p>
+            </div>
+
+            <button
+              className={styles.actionButton}
+              onClick={handleContinueStory}
+            >
+              CONTINUE
+            </button>
+          </>
         )}
 
-        {currentQuestion.type === "multi-blank" && (
-          <div className={styles.multiBlankPreview}>
-            {selectedBlanks.length === 0
-              ? "Tap the words below to fill the blanks"
-              : selectedBlanks.map((word, index) => (
-                  <span key={word}>
-                    {index > 0 && " "}
-                    {word}
-                  </span>
-                ))}
-          </div>
-        )}
+        {/* WORD BY WORD */}
 
-        {currentQuestion.type === "tap-order" && (
-          <div className={styles.orderPreview}>
-            {selectedOrder.length === 0
-              ? "Tap the events below in order"
-              : selectedOrder.map((item, index) => (
-                  <div key={item}>
-                    {index + 1}. {item}
+        {screen === "line" && (
+          <>
+            <div className={styles.sectionPill}>
+              VERSE {lesson.ref}
+            </div>
+
+            <p className={styles.screenType}>
+              WORD BY WORD
+            </p>
+
+            <h1>{lesson.title}</h1>
+
+            <div className={styles.verseBox}>
+              {currentLine ? (
+                <>
+                  <div className={styles.lineCounter}>
+                    LINE {lineIndex + 1} OF{" "}
+                    {lines.length}
                   </div>
-                ))}
-          </div>
+
+                  <p
+                    className={
+                      styles.sanskritText
+                    }
+                  >
+                    {currentLine.text}
+                  </p>
+
+                  <p className={styles.tapHint}>
+                    Tap a word to discover its
+                    meaning
+                  </p>
+
+                  <div className={styles.wordGrid}>
+                    {currentLine.words.map(
+                      (word) => (
+                        <button
+                          key={word.s}
+                          className={`${styles.wordButton} ${
+                            selectedWord?.s ===
+                            word.s
+                              ? styles.wordSelected
+                              : ""
+                          }`}
+                          onClick={() =>
+                            setSelectedWord(word)
+                          }
+                        >
+                          {word.s}
+                        </button>
+                      )
+                    )}
+                  </div>
+
+                  {selectedWord && (
+                    <div
+                      className={
+                        styles.wordMeaning
+                      }
+                    >
+                      <span
+                        className={
+                          styles.meaningWord
+                        }
+                      >
+                        {selectedWord.s}
+                      </span>
+
+                      <span
+                        className={
+                          styles.meaningTranslation
+                        }
+                      >
+                        {selectedWord.g}
+                      </span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className={styles.tapHint}>
+                  No Sanskrit line was found.
+                </p>
+              )}
+            </div>
+
+            <button
+              className={styles.actionButton}
+              disabled={!selectedWord}
+              onClick={handleContinueLine}
+            >
+              {lineIndex === lines.length - 1
+                ? "CONTINUE"
+                : "NEXT LINE"}
+            </button>
+          </>
         )}
 
-        {currentQuestion.type === "match-pairs" && (
-          <div className={styles.matchGame}>
-            <div className={styles.matchColumn}>
-              {currentQuestion.pairs!.map(
-                (pair: { left: string; right: string }) => {
-                  const isMatched = matches[pair.left] !== undefined;
+        {/* PRO TIP */}
+
+        {screen === "tip" && (
+          <>
+            <div className={styles.sectionPill}>
+              VERSE {lesson.ref}
+            </div>
+
+            <p className={styles.screenType}>
+              GO DEEPER
+            </p>
+
+            <h1>Pro Tip</h1>
+
+            <div className={styles.proTipBox}>
+              <div className={styles.tipIcon}>
+                💡
+              </div>
+
+              <p>
+                {lesson.proTip ??
+                  lesson.teaching ??
+                  "Look closely at how each Sanskrit word contributes to the meaning of the verse."}
+              </p>
+            </div>
+
+            {lesson.apply && (
+              <div className={styles.applyBox}>
+                <span>TRY THIS</span>
+
+                <p>{lesson.apply}</p>
+              </div>
+            )}
+
+            <button
+              className={styles.actionButton}
+              onClick={startRebuild}
+            >
+              TEST YOURSELF
+            </button>
+          </>
+        )}
+
+        {/* REBUILD GAME */}
+
+        {screen === "rebuild" && (
+          <>
+            <div className={styles.sectionPill}>
+              TEST YOURSELF
+            </div>
+
+            <p className={styles.screenType}>
+              REBUILD PART {rebuildPart + 1} OF{" "}
+              {rebuildParts.length}
+            </p>
+
+            <h1>
+              Match the meanings to the Sanskrit
+              words
+            </h1>
+
+            <p className={styles.tapHint}>
+              Tap a meaning, then choose its
+              matching Sanskrit word.
+            </p>
+
+            {/* ENGLISH MEANING BLOCKS */}
+
+            <div className={styles.options}>
+              {currentRebuildWords.map(
+                (word, index) => {
+                  const answer =
+                    rebuildAnswers[index];
+
+                  const isLocked =
+                    lockedAnswers.has(index);
+
+                  const isWrong =
+                    wrongAnswers.has(index);
 
                   return (
                     <button
-                      key={pair.left}
-                      type="button"
-                      className={`${styles.matchButton} ${
-                        selectedLeft === pair.left
-                          ? styles.matchSelected
+                      key={`${word.g}-${index}`}
+                      disabled={
+                        isLocked || isWrong
+                      }
+                      className={`${styles.option} ${
+                        selectedMeaningIndex ===
+                        index
+                          ? styles.selected
                           : ""
-                      } ${isMatched ? styles.matched : ""}`}
-                      disabled={isMatched || checked}
-                      onClick={() => setSelectedLeft(pair.left)}
+                      } ${
+                        isLocked
+                          ? styles.correctMeaning
+                          : ""
+                      } ${
+                        isWrong
+                          ? styles.wrongMeaning
+                          : ""
+                      }`}
+                      onClick={() =>
+                        handleMeaningClick(index)
+                      }
                     >
-                      {pair.left}
+                      <span
+                        className={
+                          styles.englishMeaning
+                        }
+                      >
+                        {word.g}
+                      </span>
+
+                      {answer && (
+                        <span
+                          className={
+                            styles.landedSanskrit
+                          }
+                        >
+                          {answer}
+                        </span>
+                      )}
                     </button>
                   );
                 }
               )}
             </div>
 
-            <div className={styles.matchColumn}>
-              {[
-                currentQuestion.pairs![1],
-                currentQuestion.pairs![2],
-                currentQuestion.pairs![0],
-              ].map((pair: { left: string; right: string }) => {
-                const isUsed = Object.values(matches).includes(pair.right);
+            {/* SANSKRIT CHOICES */}
+
+            <div
+              className={styles.wordGrid}
+              style={{
+                marginTop: "24px",
+              }}
+            >
+              {shuffledOptions.map((word) => {
+                const alreadyUsed =
+                  rebuildAnswers.includes(
+                    word.s
+                  );
 
                 return (
                   <button
-                    key={pair.right}
-                    type="button"
-                    className={`${styles.matchButton} ${
-                      isUsed ? styles.matched : ""
+                    key={word.s}
+                    className={`${styles.wordButton} ${
+                      alreadyUsed
+                        ? styles.matchedWord
+                        : ""
                     }`}
-                    disabled={isUsed || checked}
-                    onClick={() => handleMatch(pair.right)}
+                    disabled={
+                      alreadyUsed ||
+                      selectedMeaningIndex ===
+                        null
+                    }
+                    onClick={() =>
+                      handleSanskritClick(word.s)
+                    }
                   >
-                    {pair.right}
+                    {word.s}
                   </button>
                 );
               })}
             </div>
-          </div>
+
+            <button
+              className={styles.actionButton}
+              disabled={
+                rebuildAnswers.length === 0 ||
+                rebuildAnswers.some(
+                  (answer) => answer === null
+                ) ||
+                wrongAnswers.size > 0
+              }
+              onClick={handleCheckRebuild}
+            >
+              CHECK
+            </button>
+          </>
         )}
 
-        {currentQuestion.type !== "match-pairs" && (
-          <div className={styles.options}>
-            {currentQuestion.options!.map((option: string) => {
-              const isOrderQuestion =
-                currentQuestion.type === "tap-order";
+        {/* FEEDBACK */}
 
-              const isMultiBlank =
-                currentQuestion.type === "multi-blank";
+        {screen === "feedback" && (
+          <>
+            <div
+              className={`${styles.feedbackBox} ${
+                lastAnswerCorrect
+                  ? styles.correctFeedback
+                  : styles.wrongFeedback
+              }`}
+            >
+              <div className={styles.feedbackIcon}>
+                {lastAnswerCorrect ? "✓" : "!"}
+              </div>
 
-              const isSelected = isOrderQuestion
-                ? selectedOrder.includes(option)
-                : isMultiBlank
-                ? selectedBlanks.includes(option)
-                : selectedAnswer === option;
+              <h1>
+                {lastAnswerCorrect
+                  ? "Perfect!"
+                  : "Not quite"}
+              </h1>
 
-              let optionClass = styles.option;
+              <p>
+                You correctly rebuilt this part of
+                the verse.
+              </p>
+            </div>
 
-              if (isSelected) {
-                optionClass += ` ${styles.selected}`;
-              }
+            <div
+              className={styles.verseBox}
+              style={{
+                marginTop: "20px",
+              }}
+            >
+              <p className={styles.tapHint}>
+                Correct translation pairs
+              </p>
 
-              if (
-                checked &&
-                !isOrderQuestion &&
-                !isMultiBlank &&
-                option === currentQuestion.correctAnswer
-              ) {
-                optionClass += ` ${styles.correct}`;
-              }
+              <div className={styles.wordGrid}>
+                {currentRebuildWords.map(
+                  (word) => (
+                    <div
+                      key={word.s}
+                      className={
+                        styles.wordMeaning
+                      }
+                    >
+                      <span
+                        className={
+                          styles.meaningWord
+                        }
+                      >
+                        {word.s}
+                      </span>
 
-              if (
-                checked &&
-                !isOrderQuestion &&
-                !isMultiBlank &&
-                option === selectedAnswer &&
-                option !== currentQuestion.correctAnswer
-              ) {
-                optionClass += ` ${styles.wrong}`;
-              }
-
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  className={optionClass}
-                  onClick={() => {
-                    if (isOrderQuestion) {
-                      handleOrderAnswer(option);
-                    } else if (isMultiBlank) {
-                      handleMultiBlankAnswer(option);
-                    } else {
-                      handleAnswer(option);
-                    }
-                  }}
-                >
-                  {isOrderQuestion && selectedOrder.includes(option)
-                    ? `${selectedOrder.indexOf(option) + 1}. `
-                    : ""}
-
-                  {isMultiBlank && selectedBlanks.includes(option)
-                    ? `${selectedBlanks.indexOf(option) + 1}. `
-                    : ""}
-
-                  {option}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      <footer className={styles.footer}>
-        {!checked ? (
-          <button
-            type="button"
-            className={styles.actionButton}
-            onClick={handleCheck}
-          >
-            CHECK
-          </button>
-        ) : (
-          <div
-            className={`${styles.feedback} ${
-              answerCorrect
-                ? styles.correctFeedback
-                : styles.wrongFeedback
-            }`}
-          >
-            <div>
-              <strong>
-                {answerCorrect ? "Correct!" : "Not quite!"}
-              </strong>
-
-              <p>{currentQuestion.explanation}</p>
+                      <span
+                        className={
+                          styles.meaningTranslation
+                        }
+                      >
+                        {word.g}
+                      </span>
+                    </div>
+                  )
+                )}
+              </div>
             </div>
 
             <button
-              type="button"
               className={styles.actionButton}
-              onClick={handleNext}
+              onClick={moveToNextRebuildPart}
             >
-              CONTINUE
+              {rebuildPart <
+              rebuildParts.length - 1
+                ? "NEXT PART"
+                : "NEXT VERSE"}
             </button>
-          </div>
+          </>
         )}
-      </footer>
+      </section>
     </main>
   );
 }
