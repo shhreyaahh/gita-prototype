@@ -1,69 +1,140 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import {
+  BookOpen,
+  Flame,
+  Heart,
+  Lock,
+  Home as HomeIcon,
+  Trophy,
+  Dumbbell,
+  MoreHorizontal,
+  Sparkles,
+} from "lucide-react";
 
 export default function Home() {
+  const [level1Completed, setLevel1Completed] = useState(false);
+
+  useEffect(() => {
+    const completed = localStorage.getItem("level1Completed") === "true";
+    setLevel1Completed(completed);
+  }, []);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <main>
+      <div className="app-container">
+
+        {/* TOP STATS */}
+        <header className="stats-bar">
+          <div className="stat">
+            <BookOpen size={22} className="gita-stat-icon" />
+            <span className="stat-value">1</span>
+          </div>
+
+          <div className="stat">
+            <Flame size={24} className="streak-stat-icon" />
+            <span className="stat-value">4</span>
+          </div>
+
+          <div className="stat">
+            <Heart size={22} className="heart-stat-icon" fill="currentColor" />
+            <span className="stat-value">10</span>
+          </div>
+        </header>
+
+        {/* CHAPTER BANNER */}
+        <section className="chapter-banner">
+          <div className="chapter-content">
+            <p className="chapter-label">CHAPTER 1</p>
+            <h1>Arjuna Vishada Yoga</h1>
+          </div>
+
+          <div className="chapter-action">
+            <BookOpen size={34} />
+            <Sparkles size={14} className="chapter-sparkle" />
+          </div>
+        </section>
+
+        {/* LESSON PATH */}
+        <section className="path-section">
+          <div className="lesson-path">
+
+            {/* simple dotted path decorations */}
+            <div className="path-line line-1" />
+            <div className="path-line line-2" />
+            <div className="path-line line-3" />
+            <div className="path-line line-4" />
+
+            {/* LEVEL 1 */}
+            <Link
+              href="/level/1"
+              className={`lesson-node node-1 ${
+                level1Completed ? "completed" : "current"
+              }`}
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              {level1Completed ? "✓" : "1"}
+            </Link>
+
+            {/* LEVEL 2 */}
+            <div
+              className={`lesson-node node-2 ${
+                level1Completed ? "unlocked" : "locked"
+              }`}
             >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+              {level1Completed ? "2" : <Lock size={24} />}
+            </div>
+
+            {/* LEVEL 3 */}
+            <div className="lesson-node node-3 locked">
+              <Lock size={24} />
+            </div>
+
+            {/* LEVEL 4 */}
+            <div className="lesson-node node-4 locked">
+              <Lock size={24} />
+            </div>
+
+            {/* LEVEL 5 */}
+            <div className="lesson-node node-5 locked">
+              <Lock size={24} />
+            </div>
+
+          </div>
+        </section>
+
+        {/* BOTTOM NAV */}
+        <nav className="bottom-nav">
+
+          <div className="nav-item active">
+            <HomeIcon size={25} fill="currentColor" />
+            <span>Journey</span>
+          </div>
+
+          <div className="nav-item">
+            <BookOpen size={25} />
+            <span>Learn</span>
+          </div>
+
+          <div className="nav-item">
+            <Trophy size={25} />
+            <span>Challenges</span>
+          </div>
+
+          <div className="nav-item">
+            <Dumbbell size={25} />
+            <span>Practice</span>
+          </div>
+
+          <div className="nav-item">
+            <MoreHorizontal size={28} />
+            <span>More</span>
+          </div>
+
+        </nav>
+
+      </div>
+    </main>
   );
 }

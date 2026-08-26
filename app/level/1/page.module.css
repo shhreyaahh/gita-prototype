@@ -1,0 +1,450 @@
+.game {
+  min-height: 100vh;
+  max-width: 430px;
+  margin: 0 auto;
+  padding: 16px;
+
+  display: flex;
+  flex-direction: column;
+
+  background: var(--bg);
+}
+
+/* HEADER */
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.close {
+  color: var(--text-muted);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.counter {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.progressTrack {
+  flex: 1;
+  height: 12px;
+
+  background: #e5ddd3;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+
+  background: var(--purple);
+
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+/* QUESTION */
+
+.content {
+  padding-top: 32px;
+}
+
+.content h1 {
+  color: var(--text);
+
+  font-size: 22px;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+/* NORMAL OPTIONS */
+
+.options {
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.option {
+  width: 100%;
+  min-height: 52px;
+
+  padding: 13px 15px;
+
+  border: 2px solid #ddd2c4;
+  border-radius: 12px;
+
+  background: var(--surface);
+  color: var(--text);
+
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+
+  cursor: pointer;
+
+  box-shadow: 0 3px 0 #d7cabb;
+
+  gap: 9px;
+  margin-top: 10px;
+
+  transition:
+    transform 0.1s ease,
+    background 0.15s ease;
+}
+
+.option:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #d7cabb;
+}
+
+.selected {
+  border-color: var(--purple);
+
+  background: #eee4f5;
+
+  box-shadow: 0 4px 0 var(--purple-dark);
+}
+
+.correct {
+  border-color: #46965a;
+
+  background: #e3f3e6;
+
+  color: #245d32;
+
+  box-shadow: 0 4px 0 #347542;
+}
+
+.wrong {
+  border-color: #d45b5b;
+
+  background: #fbe8e8;
+
+  color: #9e3535;
+
+  box-shadow: 0 4px 0 #ad4545;
+}
+
+/* TRUE / FALSE */
+
+.trueFalseOptions {
+  display: flex;
+
+  gap: 14px;
+  margin-top: 32px;
+}
+
+.trueFalseOptions .option {
+  flex: 1;
+
+  min-height: 110px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+  font-size: 18px;
+}
+
+/* FILL IN THE BLANK */
+
+.blank {
+  margin-top: 32px;
+  padding: 18px;
+
+  border: 2px solid var(--purple);
+  border-radius: 16px;
+
+  background: var(--surface);
+
+  box-shadow: 0 4px 0 var(--purple-dark);
+
+  font-size: 21px;
+  font-weight: 700;
+
+  color: var(--purple);
+  text-align: center;
+}
+
+/* ORDER QUESTION */
+
+.orderPreview {
+  margin-top: 28px;
+
+  padding: 16px;
+  min-height: 100px;
+
+  border: 2px dashed #cdbcd9;
+  border-radius: 16px;
+
+  background: #faf6f0;
+
+  color: var(--text-muted);
+}
+
+.orderPreview div {
+  margin-bottom: 8px;
+
+  color: var(--purple);
+  font-weight: 700;
+}
+
+/* MATCH PAIRS */
+
+.matchGame {
+  display: flex;
+
+  gap: 12px;
+  margin-top: 32px;
+
+  width: 100%;
+}
+
+.matchColumn {
+  display: flex;
+  flex-direction: column;
+
+  gap: 12px;
+
+  width: 50%;
+  min-width: 0;
+}
+
+.matchButton {
+  width: 100%;
+  min-height: 58px;
+
+  padding: 10px;
+
+  border: 2px solid #ddd2c4;
+  border-radius: 12px;
+
+  background: var(--surface);
+  color: var(--text);
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow: 0 3px 0 #d7cabb;
+
+  transition: transform 0.1s ease;
+}
+
+.matchButton:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 #d7cabb;
+}
+
+.matchSelected {
+  border-color: var(--purple);
+
+  background: #eee4f5;
+
+  box-shadow: 0 4px 0 var(--purple-dark);
+}
+
+.matched {
+  border-color: var(--purple);
+
+  background: #eee4f5;
+
+  opacity: 0.75;
+}
+
+/* FOOTER */
+
+.footer {
+  margin-top: auto;
+
+  padding-top: 28px;
+  padding-bottom: 8px;
+}
+
+.actionButton {
+  width: 100%;
+  min-height: 50px;
+
+  padding: 12px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: var(--purple);
+  color: white;
+
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+
+  cursor: pointer;
+
+  box-shadow: 0 4px 0 var(--purple-dark);
+
+  transition: transform 0.1s ease;
+  margin-top: 15px;
+}
+
+.actionButton:active {
+  transform: translateY(3px);
+  box-shadow: 0 2px 0 var(--purple-dark);
+}
+
+.actionButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* FEEDBACK */
+
+.feedback {
+  padding: 18px;
+
+  border-radius: 18px;
+}
+
+.feedback strong {
+  font-size: 18px;
+}
+
+.feedback p {
+  margin-top: 6px;
+
+  line-height: 1.4;
+  font-size: 14px;
+}
+
+.correctFeedback {
+  background: #e3f3e6;
+  color: #245d32;
+}
+
+.wrongFeedback {
+  background: #fbe8e8;
+  color: #9e3535;
+}
+
+/* COMPLETE SCREEN */
+
+.completeScreen {
+  min-height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+
+  padding: 32px 24px;
+
+  background: var(--bg);
+}
+
+.completeIcon {
+  font-size: 72px;
+  margin-bottom: 20px;
+}
+
+.completeLabel {
+  color: var(--purple);
+
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.completeScreen h1 {
+  margin-top: 12px;
+
+  color: var(--text);
+
+  font-size: 32px;
+  line-height: 1.2;
+}
+
+.completeText {
+  margin-top: 14px;
+
+  color: var(--text-muted);
+
+  line-height: 1.5;
+}
+
+.scoreCard {
+  width: 100%;
+
+  margin-top: 32px;
+  padding: 22px;
+
+  border: 2px solid #ddd2c4;
+  border-radius: 20px;
+
+  background: var(--surface);
+
+  box-shadow: 0 5px 0 #d7cabb;
+}
+
+.scoreCard span {
+  display: block;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  color: var(--text-muted);
+
+  margin-bottom: 8px;
+}
+
+.scoreCard strong {
+  font-size: 38px;
+
+  color: var(--purple);
+}
+
+.completeButton {
+  width: 100%;
+
+  margin-top: 24px;
+  padding: 17px;
+
+  display: block;
+
+  border-radius: 16px;
+
+  background: var(--purple);
+  color: white;
+
+  font-weight: 700;
+  text-decoration: none;
+
+  box-shadow: 0 5px 0 var(--purple-dark);
+}
+
+/* GAME STATS */
+
+.gameStats {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+}
+
+.hearts {
+  color: #e85d75;
+
+  font-size: 14px;
+  font-weight: 700;
+}
