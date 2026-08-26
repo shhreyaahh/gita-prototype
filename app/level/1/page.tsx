@@ -56,15 +56,15 @@ export default function LevelOnePage() {
 
   const handleCheck = () => {
     if (currentQuestion.type === "tap-order") {
-      if (selectedOrder.length !== currentQuestion.options.length) return;
+      if (selectedOrder.length !== currentQuestion.options!.length) return;
     }
 
     if (currentQuestion.type === "multi-blank") {
-      if (selectedBlanks.length !== currentQuestion.correctAnswer.length) return;
+      if (selectedBlanks.length !== (currentQuestion.correctAnswer as string[]).length) return;
     }
 
     if (currentQuestion.type === "match-pairs") {
-      if (Object.keys(matches).length !== currentQuestion.pairs.length) return;
+      if (Object.keys(matches).length !== currentQuestion.pairs!.length) return;
     }
 
     if (
@@ -109,7 +109,7 @@ export default function LevelOnePage() {
     }
 
     if (currentQuestion.type === "match-pairs") {
-      return currentQuestion.pairs.every(
+      return currentQuestion.pairs!.every(
         (pair: { left: string; right: string }) =>
           matches[pair.left] === pair.right
       );
@@ -252,7 +252,7 @@ export default function LevelOnePage() {
         {currentQuestion.type === "match-pairs" && (
           <div className={styles.matchGame}>
             <div className={styles.matchColumn}>
-              {currentQuestion.pairs.map(
+              {currentQuestion.pairs!.map(
                 (pair: { left: string; right: string }) => {
                   const isMatched = matches[pair.left] !== undefined;
 
@@ -277,9 +277,9 @@ export default function LevelOnePage() {
 
             <div className={styles.matchColumn}>
               {[
-                currentQuestion.pairs[1],
-                currentQuestion.pairs[2],
-                currentQuestion.pairs[0],
+                currentQuestion.pairs![1],
+                currentQuestion.pairs![2],
+                currentQuestion.pairs![0],
               ].map((pair: { left: string; right: string }) => {
                 const isUsed = Object.values(matches).includes(pair.right);
 
@@ -303,7 +303,7 @@ export default function LevelOnePage() {
 
         {currentQuestion.type !== "match-pairs" && (
           <div className={styles.options}>
-            {currentQuestion.options.map((option: string) => {
+            {currentQuestion.options!.map((option: string) => {
               const isOrderQuestion =
                 currentQuestion.type === "tap-order";
 
