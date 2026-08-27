@@ -38,13 +38,13 @@ type Lesson = {
   };
 };
 
-type Screen =
-  | "story"
-  | "line"
-  | "tip"
-  | "rebuild"
-  | "feedback"
-  | "complete";
+type Screen = "story" | "line" | "tip" | "game" | "feedback" | "complete";
+
+type GameType = "rebuild" | "match" | "fill";
+
+function shuffle<T>(items: T[]) {
+  return [...items].sort(() => Math.random() - 0.5);
+}
 
 export default function LevelOnePage() {
   const lessons = level1 as Lesson[];
@@ -54,31 +54,28 @@ export default function LevelOnePage() {
 
   const [lineIndex, setLineIndex] = useState(0);
 
-  const [selectedWord, setSelectedWord] =
-    useState<Word | null>(null);
+  const [selectedWord, setSelectedWord] = useState<Word | null>(null);
 
   const [hearts, setHearts] = useState(10);
   const [score, setScore] = useState(0);
 
-  const [rebuildPart, setRebuildPart] = useState(0);
+  /*
+    GAME STATE
+  */
 
-  const [selectedMeaningIndex, setSelectedMeaningIndex] =
-    useState<number | null>(null);
+  // Rebuild + Match
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
-  const [rebuildAnswers, setRebuildAnswers] = useState<
-    (string | null)[]
-  >([]);
+  const [gameAnswers, setGameAnswers] = useState<(string | null)[]>([]);
 
-  const [lockedAnswers, setLockedAnswers] = useState<
-    Set<number>
-  >(new Set());
+  const [lockedAnswers, setLockedAnswers] = useState<Set<number>>(new Set());
 
-  const [wrongAnswers, setWrongAnswers] = useState<
-    Set<number>
-  >(new Set());
+  const [wrongAnswers, setWrongAnswers] = useState<Set<number>>(new Set());
 
-  const [lastAnswerCorrect, setLastAnswerCorrect] =
-    useState(false);
+  // Fill
+  const [fillAnswer, setFillAnswer] = useState<string | null>(null);
+
+  const [fillResult, setFillResult] = useState<boolean | null>(null);
 
   const lesson = lessons[lessonIndex];
 
@@ -89,38 +86,86 @@ export default function LevelOnePage() {
 
   const currentLine = lines[lineIndex];
 
-  const verseWords = useMemo(() => {
-    return lines.flatMap((line) => line.words);
+  /*
+    GAME ROTATION
+
+    Verse 1 → Rebuild
+    Verse 2 → Match
+    Verse 3 → Fill
+    Verse 4 → Rebuild
+    ...
+  */
+  const gameType: GameType =
+    lessonIndex % 3 === 0
+      ? "rebuild"
+      : lessonIndex % 3 === 1
+        ? "match"
+        : "fill";
+
+  /*
+    IMPORTANT:
+
+    We do NOT test the entire verse in one giant
+    13-word game.
+
+    We choose ONE manageable line from the verse
+    for the game.
+  */
+  const gameLineIndex = lines.length > 0 ? lessonIndex % lines.length : 0;
+
+  const gameLine = lines[gameLineIndex] ?? {
+    text: "",
+    words: [],
+  };
+
+  const gameWords = gameLine.words;
+
+  /*
+    Stable shuffled game options.
+    They only change when moving to another verse.
+  */
+  const shuffledGameWords = useMemo(() => {
+    return shuffle(gameWords);
   }, [lessonIndex]);
 
-  const rebuildParts = useMemo(() => {
-    if (verseWords.length === 0) return [];
+  /*
+    FILL GAME TARGET
 
-    const splitPoint = Math.ceil(
-      verseWords.length / 2
-    );
+    One word is removed from the selected line.
+  */
+  const fillTargetIndex =
+    gameWords.length > 0 ? lessonIndex % gameWords.length : 0;
 
-    return [
-      verseWords.slice(0, splitPoint),
-      verseWords.slice(splitPoint),
-    ].filter((part) => part.length > 0);
-  }, [verseWords]);
+  const fillTarget = gameWords[fillTargetIndex];
 
-  const currentRebuildWords =
-    rebuildParts[rebuildPart] ?? [];
+  const fillOptions = useMemo(() => {
+    if (!fillTarget) return [];
 
-  const shuffledOptions = useMemo(() => {
-    return [...currentRebuildWords].sort(
-      () => Math.random() - 0.5
-    );
-  }, [lessonIndex, rebuildPart]);
+    const verseWords = lines.flatMap((line) => line.words);
 
-  const totalSteps = lessons.reduce(
-    (total, item) => {
-      return total + item.lines.length + 4;
-    },
-    0
-  );
+    const distractors = shuffle(
+      verseWords.filter((word) => word.s !== fillTarget.s),
+    ).slice(0, 3);
+
+    return shuffle([fillTarget, ...distractors]);
+  }, [lessonIndex, fillTargetIndex]);
+
+  /*
+    PROGRESS
+
+    Per verse:
+
+    Story
+    Line 1
+    Line 2
+    Line 3
+    Pro Tip
+    Game
+    Feedback
+  */
+  const totalSteps = lessons.reduce((total, item) => {
+    return total + item.lines.length + 4;
+  }, 0);
 
   const completedBefore = lessons
     .slice(0, lessonIndex)
@@ -142,24 +187,20 @@ export default function LevelOnePage() {
     currentStep += 1 + lines.length;
   }
 
-  if (screen === "rebuild") {
-    currentStep +=
-      2 + lines.length + rebuildPart;
+  if (screen === "game") {
+    currentStep += 2 + lines.length;
   }
 
   if (screen === "feedback") {
-    currentStep +=
-      3 + lines.length;
+    currentStep += 3 + lines.length;
   }
 
   const progress =
-    totalSteps > 0
-      ? Math.min(
-          (currentStep / totalSteps) * 100,
-          100
-        )
-      : 0;
+    totalSteps > 0 ? Math.min((currentStep / totalSteps) * 100, 100) : 0;
 
+  /*
+    STORY
+  */
   function handleContinueStory() {
     setLineIndex(0);
     setSelectedWord(null);
@@ -171,11 +212,13 @@ export default function LevelOnePage() {
     }
   }
 
+  /*
+    LINE LEARNING
+  */
   function handleContinueLine() {
     if (!selectedWord) return;
 
-    const isLastLine =
-      lineIndex >= lines.length - 1;
+    const isLastLine = lineIndex >= lines.length - 1;
 
     if (isLastLine) {
       setSelectedWord(null);
@@ -187,211 +230,266 @@ export default function LevelOnePage() {
     setSelectedWord(null);
   }
 
-  function startRebuild() {
-    setRebuildPart(0);
+  /*
+    START GAME
+  */
+  function startGame() {
+    setSelectedIndex(null);
 
-    const firstPart = rebuildParts[0] ?? [];
-
-    setRebuildAnswers(
-      Array(firstPart.length).fill(null)
-    );
+    setGameAnswers(Array(gameWords.length).fill(null));
 
     setLockedAnswers(new Set());
     setWrongAnswers(new Set());
 
-    setSelectedMeaningIndex(null);
+    setFillAnswer(null);
+    setFillResult(null);
 
-    setLastAnswerCorrect(false);
-
-    setScreen("rebuild");
+    setScreen("game");
   }
 
- function handleMeaningClick(index: number) {
-  // Correct/locked answers cannot be changed
-  if (lockedAnswers.has(index)) return;
+  /*
+    =========================
+    REBUILD GAME
+    =========================
 
-  // If this block already has a Sanskrit word,
-  // clicking it removes the word and returns it
-  // to the Sanskrit choices below.
-  if (rebuildAnswers[index] !== null) {
-    setRebuildAnswers((previous) => {
-      const updated = [...previous];
-      updated[index] = null;
-      return updated;
-    });
+    Tap Sanskrit word
+    ↓
+    Tap correct position
+  */
+  function handleRebuildWordClick(word: string) {
+    if (gameAnswers.includes(word)) return;
 
-    setSelectedMeaningIndex(null);
-    return;
+    const wordIndex = shuffledGameWords.findIndex((item) => item.s === word);
+
+    setSelectedIndex(wordIndex);
   }
 
-  // Otherwise select this empty English meaning block
-  setSelectedMeaningIndex(index);
-}
+  function handleRebuildSlotClick(index: number) {
+    if (lockedAnswers.has(index)) return;
 
-  function handleSanskritClick(word: string) {
-    if (selectedMeaningIndex === null) return;
+    if (gameAnswers[index] !== null) {
+      setGameAnswers((previous) => {
+        const updated = [...previous];
+        updated[index] = null;
+        return updated;
+      });
 
-    if (lockedAnswers.has(selectedMeaningIndex)) {
       return;
     }
 
-    setRebuildAnswers((previous) => {
+    if (selectedIndex === null) return;
+
+    const selected = shuffledGameWords[selectedIndex];
+
+    if (!selected) return;
+
+    setGameAnswers((previous) => {
       const updated = [...previous];
 
-      /*
-        If this Sanskrit word was already placed
-        somewhere else incorrectly, remove it first.
-      */
-      const existingIndex =
-        updated.findIndex(
-          (answer) => answer === word
-        );
+      const existingIndex = updated.findIndex(
+        (answer) => answer === selected.s,
+      );
 
       if (
         existingIndex !== -1 &&
-        existingIndex !== selectedMeaningIndex &&
+        existingIndex !== index &&
         !lockedAnswers.has(existingIndex)
       ) {
         updated[existingIndex] = null;
       }
 
-      updated[selectedMeaningIndex] = word;
+      updated[index] = selected.s;
 
       return updated;
     });
 
-    setSelectedMeaningIndex(null);
+    setSelectedIndex(null);
   }
 
-  function handleCheckRebuild() {
-    const allAnswered =
-      rebuildAnswers.length ===
-        currentRebuildWords.length &&
-      rebuildAnswers.every(
-        (answer) => answer !== null
-      );
-
-    if (!allAnswered) return;
-
-    const correctIndexes = new Set<number>();
-    const wrongIndexes = new Set<number>();
-
-    currentRebuildWords.forEach(
-      (word, index) => {
-        if (rebuildAnswers[index] === word.s) {
-          correctIndexes.add(index);
-        } else {
-          wrongIndexes.add(index);
-        }
-      }
-    );
-
-    /*
-      EVERYTHING CORRECT
-    */
-    if (wrongIndexes.size === 0) {
-      setLockedAnswers(correctIndexes);
-      setWrongAnswers(new Set());
-
-      setSelectedMeaningIndex(null);
-
-      setScore((previous) => previous + 1);
-
-      setHearts((previous) =>
-        Math.min(previous + 1, 10)
-      );
-
-      setLastAnswerCorrect(true);
-
-      /*
-        Keep green state visible briefly
-        before feedback appears.
-      */
-      setTimeout(() => {
-        setScreen("feedback");
-      }, 700);
-
+  function checkRebuildGame() {
+    if (
+      gameAnswers.length === 0 ||
+      gameAnswers.some((answer) => answer === null)
+    ) {
       return;
     }
 
-    /*
-      SOME ANSWERS ARE WRONG
+    const correct = new Set<number>();
+    const wrong = new Set<number>();
 
-      Correct:
-      green + locked
+    gameWords.forEach((word, index) => {
+      if (gameAnswers[index] === word.s) {
+        correct.add(index);
+      } else {
+        wrong.add(index);
+      }
+    });
 
-      Wrong:
-      red + wiggle
-    */
-    setLockedAnswers(correctIndexes);
+    setLockedAnswers(correct);
+    setWrongAnswers(wrong);
 
-    setWrongAnswers(wrongIndexes);
+    if (wrong.size === 0) {
+      handleGameSuccess();
+      return;
+    }
 
-    setSelectedMeaningIndex(null);
+    handleGameWrong(wrong);
+  }
 
-    setHearts((previous) =>
-      Math.max(previous - 1, 0)
-    );
+  /*
+    =========================
+    MATCH GAME
+    =========================
 
-    /*
-      After animation, remove ONLY
-      the wrong Sanskrit answers.
+    Tap English meaning
+    ↓
+    Tap matching Sanskrit word
+  */
+  function handleMatchMeaningClick(index: number) {
+    if (lockedAnswers.has(index)) return;
+    if (wrongAnswers.has(index)) return;
 
-      Correct green pairs remain.
-    */
+    if (gameAnswers[index] !== null) {
+      setGameAnswers((previous) => {
+        const updated = [...previous];
+        updated[index] = null;
+        return updated;
+      });
+
+      setSelectedIndex(null);
+      return;
+    }
+
+    setSelectedIndex(index);
+  }
+
+  function handleMatchSanskritClick(word: string) {
+    if (selectedIndex === null) return;
+
+    setGameAnswers((previous) => {
+      const updated = [...previous];
+
+      const existingIndex = updated.findIndex((answer) => answer === word);
+
+      if (
+        existingIndex !== -1 &&
+        existingIndex !== selectedIndex &&
+        !lockedAnswers.has(existingIndex)
+      ) {
+        updated[existingIndex] = null;
+      }
+
+      updated[selectedIndex] = word;
+
+      return updated;
+    });
+
+    setSelectedIndex(null);
+  }
+
+  function checkMatchGame() {
+    if (
+      gameAnswers.length === 0 ||
+      gameAnswers.some((answer) => answer === null)
+    ) {
+      return;
+    }
+
+    const correct = new Set<number>();
+    const wrong = new Set<number>();
+
+    gameWords.forEach((word, index) => {
+      if (gameAnswers[index] === word.s) {
+        correct.add(index);
+      } else {
+        wrong.add(index);
+      }
+    });
+
+    setLockedAnswers(correct);
+    setWrongAnswers(wrong);
+
+    if (wrong.size === 0) {
+      handleGameSuccess();
+      return;
+    }
+
+    handleGameWrong(wrong);
+  }
+
+  /*
+    =========================
+    FILL GAME
+    =========================
+  */
+  function handleFillAnswer(word: string) {
+    if (!fillTarget) return;
+    if (fillAnswer !== null) return;
+
+    const isCorrect = word === fillTarget.s;
+
+    setFillAnswer(word);
+    setFillResult(isCorrect);
+
+    if (isCorrect) {
+      handleGameSuccess();
+      return;
+    }
+
+    setHearts((previous) => Math.max(previous - 1, 0));
+
     setTimeout(() => {
-      setRebuildAnswers((previous) =>
+      setFillAnswer(null);
+      setFillResult(null);
+    }, 650);
+  }
+
+  /*
+    =========================
+    GAME SUCCESS
+    =========================
+  */
+  function handleGameSuccess() {
+    setScore((previous) => previous + 1);
+
+    setHearts((previous) => Math.min(previous + 1, 10));
+
+    setTimeout(() => {
+      setScreen("feedback");
+    }, 650);
+  }
+
+  /*
+    =========================
+    GAME WRONG
+    =========================
+  */
+  function handleGameWrong(wrongIndexes: Set<number>) {
+    setHearts((previous) => Math.max(previous - 1, 0));
+
+    setSelectedIndex(null);
+
+    setTimeout(() => {
+      setGameAnswers((previous) =>
         previous.map((answer, index) =>
-          wrongIndexes.has(index)
-            ? null
-            : answer
-        )
+          wrongIndexes.has(index) ? null : answer,
+        ),
       );
 
       setWrongAnswers(new Set());
     }, 650);
   }
 
-  function moveToNextRebuildPart() {
-    const nextPart = rebuildPart + 1;
-
-    if (nextPart < rebuildParts.length) {
-      const nextWords =
-        rebuildParts[nextPart] ?? [];
-
-      setRebuildPart(nextPart);
-
-      setRebuildAnswers(
-        Array(nextWords.length).fill(null)
-      );
-
-      setLockedAnswers(new Set());
-      setWrongAnswers(new Set());
-
-      setSelectedMeaningIndex(null);
-
-      setLastAnswerCorrect(false);
-
-      setScreen("rebuild");
-
-      return;
-    }
-
-    handleNextVerse();
-  }
-
+  /*
+    NEXT VERSE
+  */
   function handleNextVerse() {
-    const isLastLesson =
-      lessonIndex === lessons.length - 1;
+    const isLastLesson = lessonIndex === lessons.length - 1;
 
     if (isLastLesson) {
-      localStorage.setItem(
-        "level1Completed",
-        "true"
-      );
+      localStorage.setItem("level1Completed", "true");
 
       setScreen("complete");
-
       return;
     }
 
@@ -400,18 +498,34 @@ export default function LevelOnePage() {
     setLineIndex(0);
     setSelectedWord(null);
 
-    setRebuildPart(0);
-    setSelectedMeaningIndex(null);
-
-    setRebuildAnswers([]);
+    setSelectedIndex(null);
+    setGameAnswers([]);
 
     setLockedAnswers(new Set());
     setWrongAnswers(new Set());
 
-    setLastAnswerCorrect(false);
+    setFillAnswer(null);
+    setFillResult(null);
 
     setScreen("story");
   }
+
+  /*
+    GAME TEXT
+  */
+  const gameTitle =
+    gameType === "rebuild"
+      ? "Rebuild the line"
+      : gameType === "match"
+        ? "Match the meanings"
+        : "Fill in the missing word";
+
+  const gameInstruction =
+    gameType === "rebuild"
+      ? "Choose the Sanskrit words and place them in the correct order."
+      : gameType === "match"
+        ? "Tap a meaning, then choose its matching Sanskrit word."
+        : "Choose the Sanskrit word that correctly completes the line.";
 
   if (!lesson) {
     return (
@@ -421,17 +535,16 @@ export default function LevelOnePage() {
     );
   }
 
+  /*
+    COMPLETE
+  */
   if (screen === "complete") {
     return (
       <main className={styles.game}>
         <section className={styles.completeScreen}>
-          <div className={styles.completeIcon}>
-            🏹
-          </div>
+          <div className={styles.completeIcon}>🏹</div>
 
-          <p className={styles.completeLabel}>
-            SECTION COMPLETE
-          </p>
+          <p className={styles.completeLabel}>SECTION COMPLETE</p>
 
           <h1>Well done!</h1>
 
@@ -440,15 +553,11 @@ export default function LevelOnePage() {
           </p>
 
           <div className={styles.scoreCard}>
-            <span>Correct rebuilds</span>
-
+            <span>Games completed</span>
             <strong>{score}</strong>
           </div>
 
-          <Link
-            href="/"
-            className={styles.completeButton}
-          >
+          <Link href="/" className={styles.completeButton}>
             CONTINUE JOURNEY
           </Link>
         </section>
@@ -459,11 +568,7 @@ export default function LevelOnePage() {
   return (
     <main className={styles.game}>
       <header className={styles.header}>
-        <Link
-          href="/"
-          className={styles.close}
-          aria-label="Close lesson"
-        >
+        <Link href="/" className={styles.close} aria-label="Close lesson">
           ✕
         </Link>
 
@@ -477,13 +582,9 @@ export default function LevelOnePage() {
         </div>
 
         <div className={styles.gameStats}>
-          <span className={styles.hearts}>
-            ❤️ {hearts}
-          </span>
+          <span className={styles.hearts}>❤️ {hearts}</span>
 
-          <span className={styles.counter}>
-            {lesson.ref}
-          </span>
+          <span className={styles.counter}>{lesson.ref}</span>
         </div>
       </header>
 
@@ -492,20 +593,14 @@ export default function LevelOnePage() {
 
         {screen === "story" && (
           <>
-            <div className={styles.sectionPill}>
-              VERSE {lesson.ref}
-            </div>
+            <div className={styles.sectionPill}>VERSE {lesson.ref}</div>
 
-            <p className={styles.screenType}>
-              LEARN
-            </p>
+            <p className={styles.screenType}>LEARN</p>
 
             <h1>{lesson.title}</h1>
 
             <div className={styles.storyBox}>
-              <div className={styles.boxIcon}>
-                📖
-              </div>
+              <div className={styles.boxIcon}>📖</div>
 
               <p>{lesson.story}</p>
             </div>
@@ -525,90 +620,57 @@ export default function LevelOnePage() {
           </>
         )}
 
-        {/* WORD BY WORD */}
+        {/* LINE BY LINE LEARNING */}
 
         {screen === "line" && (
           <>
-            <div className={styles.sectionPill}>
-              VERSE {lesson.ref}
-            </div>
+            <div className={styles.sectionPill}>VERSE {lesson.ref}</div>
 
-            <p className={styles.screenType}>
-              WORD BY WORD
-            </p>
+            <p className={styles.screenType}>WORD BY WORD</p>
 
             <h1>{lesson.title}</h1>
 
-            <div className={styles.verseBox}>
+            <div key={lineIndex} className={styles.verseBox}>
               {currentLine ? (
                 <>
                   <div className={styles.lineCounter}>
-                    LINE {lineIndex + 1} OF{" "}
-                    {lines.length}
+                    LINE {lineIndex + 1} OF {lines.length}
                   </div>
 
-                  <p
-                    className={
-                      styles.sanskritText
-                    }
-                  >
-                    {currentLine.text}
-                  </p>
+                  <p className={styles.sanskritText}>{currentLine.text}</p>
 
                   <p className={styles.tapHint}>
-                    Tap a word to discover its
-                    meaning
+                    Tap a word to discover its meaning
                   </p>
 
                   <div className={styles.wordGrid}>
-                    {currentLine.words.map(
-                      (word) => (
-                        <button
-                          key={word.s}
-                          className={`${styles.wordButton} ${
-                            selectedWord?.s ===
-                            word.s
-                              ? styles.wordSelected
-                              : ""
-                          }`}
-                          onClick={() =>
-                            setSelectedWord(word)
-                          }
-                        >
-                          {word.s}
-                        </button>
-                      )
-                    )}
+                    {currentLine.words.map((word) => (
+                      <button
+                        key={word.s}
+                        className={`${styles.wordButton} ${
+                          selectedWord?.s === word.s ? styles.wordSelected : ""
+                        }`}
+                        onClick={() => setSelectedWord(word)}
+                      >
+                        {word.s}
+                      </button>
+                    ))}
                   </div>
 
                   {selectedWord && (
-                    <div
-                      className={
-                        styles.wordMeaning
-                      }
-                    >
-                      <span
-                        className={
-                          styles.meaningWord
-                        }
-                      >
+                    <div className={styles.wordMeaning}>
+                      <span className={styles.meaningWord}>
                         {selectedWord.s}
                       </span>
 
-                      <span
-                        className={
-                          styles.meaningTranslation
-                        }
-                      >
+                      <span className={styles.meaningTranslation}>
                         {selectedWord.g}
                       </span>
                     </div>
                   )}
                 </>
               ) : (
-                <p className={styles.tapHint}>
-                  No Sanskrit line was found.
-                </p>
+                <p className={styles.tapHint}>No Sanskrit line was found.</p>
               )}
             </div>
 
@@ -617,9 +679,7 @@ export default function LevelOnePage() {
               disabled={!selectedWord}
               onClick={handleContinueLine}
             >
-              {lineIndex === lines.length - 1
-                ? "CONTINUE"
-                : "NEXT LINE"}
+              {lineIndex === lines.length - 1 ? "CONTINUE" : "NEXT LINE"}
             </button>
           </>
         )}
@@ -627,180 +687,269 @@ export default function LevelOnePage() {
         {/* PRO TIP */}
 
         {screen === "tip" && (
-          <>
-            <div className={styles.sectionPill}>
-              VERSE {lesson.ref}
+          <div className={styles.proTipPopup}>
+            <div className={styles.proTipPopupTop}>
+              <div className={styles.tipIcon}>💡</div>
+
+              <div>
+                <p className={styles.proTipEyebrow}>VERSE {lesson.ref}</p>
+
+                <h1>Pro Tip</h1>
+              </div>
             </div>
 
-            <p className={styles.screenType}>
-              GO DEEPER
-            </p>
-
-            <h1>Pro Tip</h1>
-
-            <div className={styles.proTipBox}>
-              <div className={styles.tipIcon}>
-                💡
-              </div>
-
-              <p>
+            <div className={styles.proTipContent}>
+              <p className={styles.proTipText}>
                 {lesson.proTip ??
                   lesson.teaching ??
                   "Look closely at how each Sanskrit word contributes to the meaning of the verse."}
               </p>
-            </div>
 
-            {lesson.apply && (
-              <div className={styles.applyBox}>
-                <span>TRY THIS</span>
+              {lesson.apply && (
+                <div className={styles.proTipApply}>
+                  <span>TRY THIS</span>
 
-                <p>{lesson.apply}</p>
-              </div>
-            )}
-
-            <button
-              className={styles.actionButton}
-              onClick={startRebuild}
-            >
-              TEST YOURSELF
-            </button>
-          </>
-        )}
-
-        {/* REBUILD GAME */}
-
-        {screen === "rebuild" && (
-          <>
-            <div className={styles.sectionPill}>
-              TEST YOURSELF
-            </div>
-
-            <p className={styles.screenType}>
-              REBUILD PART {rebuildPart + 1} OF{" "}
-              {rebuildParts.length}
-            </p>
-
-            <h1>
-              Match the meanings to the Sanskrit
-              words
-            </h1>
-
-            <p className={styles.tapHint}>
-              Tap a meaning, then choose its
-              matching Sanskrit word.
-            </p>
-
-            {/* ENGLISH MEANING BLOCKS */}
-
-            <div className={styles.options}>
-              {currentRebuildWords.map(
-                (word, index) => {
-                  const answer =
-                    rebuildAnswers[index];
-
-                  const isLocked =
-                    lockedAnswers.has(index);
-
-                  const isWrong =
-                    wrongAnswers.has(index);
-
-                  return (
-                    <button
-                      key={`${word.g}-${index}`}
-                      disabled={
-                        isLocked || isWrong
-                      }
-                      className={`${styles.option} ${
-                        selectedMeaningIndex ===
-                        index
-                          ? styles.selected
-                          : ""
-                      } ${
-                        isLocked
-                          ? styles.correctMeaning
-                          : ""
-                      } ${
-                        isWrong
-                          ? styles.wrongMeaning
-                          : ""
-                      }`}
-                      onClick={() =>
-                        handleMeaningClick(index)
-                      }
-                    >
-                      <span
-                        className={
-                          styles.englishMeaning
-                        }
-                      >
-                        {word.g}
-                      </span>
-
-                      {answer && (
-                        <span
-                          className={
-                            styles.landedSanskrit
-                          }
-                        >
-                          {answer}
-                        </span>
-                      )}
-                    </button>
-                  );
-                }
+                  <p>{lesson.apply}</p>
+                </div>
               )}
             </div>
 
-            {/* SANSKRIT CHOICES */}
-
-            <div
-              className={styles.wordGrid}
-              style={{
-                marginTop: "24px",
-              }}
-            >
-              {shuffledOptions.map((word) => {
-                const alreadyUsed =
-                  rebuildAnswers.includes(
-                    word.s
-                  );
-
-                return (
-                  <button
-                    key={word.s}
-                    className={`${styles.wordButton} ${
-                      alreadyUsed
-                        ? styles.matchedWord
-                        : ""
-                    }`}
-                    disabled={
-                      alreadyUsed ||
-                      selectedMeaningIndex ===
-                        null
-                    }
-                    onClick={() =>
-                      handleSanskritClick(word.s)
-                    }
-                  >
-                    {word.s}
-                  </button>
-                );
-              })}
-            </div>
-
             <button
-              className={styles.actionButton}
-              disabled={
-                rebuildAnswers.length === 0 ||
-                rebuildAnswers.some(
-                  (answer) => answer === null
-                ) ||
-                wrongAnswers.size > 0
-              }
-              onClick={handleCheckRebuild}
+              className={`${styles.actionButton} ${styles.proTipButton}`}
+              onClick={startGame}
             >
-              CHECK
+              TEST YOURSELF
             </button>
+          </div>
+        )}
+
+        {/* SINGLE GAME */}
+
+        {screen === "game" && (
+          <>
+            <div className={styles.sectionPill}>TEST YOURSELF</div>
+
+            <p className={styles.screenType}>
+              {gameType === "rebuild"
+                ? "REBUILD"
+                : gameType === "match"
+                  ? "MATCH"
+                  : "FILL THE BLANK"}
+            </p>
+
+            <h1>{gameTitle}</h1>
+
+            <p className={styles.tapHint}>{gameInstruction}</p>
+
+            {/* REBUILD */}
+            {/* REBUILD */}
+
+            {gameType === "rebuild" && (
+              <>
+                <div className={styles.rebuildSlots}>
+                  {gameWords.map((word, index) => {
+                    const answer = gameAnswers[index];
+
+                    const isLocked = lockedAnswers.has(index);
+
+                    const isWrong = wrongAnswers.has(index);
+
+                    const isEmpty = answer === null;
+
+                    const isWordSelected = selectedIndex !== null;
+
+                    return (
+                      <button
+                        key={`${word.s}-${index}`}
+                        disabled={isLocked || isWrong}
+                        className={`${styles.rebuildSlot} ${
+                          isEmpty ? styles.empty : styles.filled
+                        } ${
+                          isEmpty && isWordSelected ? styles.available : ""
+                        } ${isLocked ? styles.correctMeaning : ""} ${
+                          isWrong ? styles.wrongMeaning : ""
+                        }`}
+                        onClick={() => handleRebuildSlotClick(index)}
+                      >
+                        {answer && (
+                          <span className={styles.landedSanskrit}>
+                            {answer}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* KEEP YOUR EXISTING WORD BANK BELOW */}
+                <div
+                  className={styles.wordGrid}
+                  style={{
+                    marginTop: "24px",
+                  }}
+                >
+                  {shuffledGameWords.map((word, index) => {
+                    const used = gameAnswers.includes(word.s);
+
+                    return (
+                      <button
+                        key={word.s}
+                        disabled={used}
+                        className={`${styles.wordButton} ${
+                          selectedIndex === index ? styles.wordSelected : ""
+                        } ${used ? styles.matchedWord : ""}`}
+                        onClick={() => handleRebuildWordClick(word.s)}
+                      >
+                        {word.s}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  className={styles.actionButton}
+                  disabled={
+                    gameAnswers.some((answer) => answer === null) ||
+                    wrongAnswers.size > 0
+                  }
+                  onClick={checkRebuildGame}
+                >
+                  CHECK
+                </button>
+              </>
+            )}
+
+            {/* MATCH */}
+
+            {gameType === "match" && (
+              <>
+                <div
+                  className={styles.options}
+                  style={{
+                    marginTop: "24px",
+                  }}
+                >
+                  {gameWords.map((word, index) => {
+                    const answer = gameAnswers[index];
+
+                    const isLocked = lockedAnswers.has(index);
+
+                    const isWrong = wrongAnswers.has(index);
+
+                    return (
+                      <button
+                        key={`${word.g}-${index}`}
+                        disabled={isLocked || isWrong}
+                        className={`${styles.option} ${
+                          selectedIndex === index ? styles.selected : ""
+                        } ${isLocked ? styles.correctMeaning : ""} ${
+                          isWrong ? styles.wrongMeaning : ""
+                        }`}
+                        onClick={() => handleMatchMeaningClick(index)}
+                      >
+                        <span className={styles.englishMeaning}>{word.g}</span>
+
+                        {answer && (
+                          <span className={styles.landedSanskrit}>
+                            {answer}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div
+                  className={styles.wordGrid}
+                  style={{
+                    marginTop: "24px",
+                  }}
+                >
+                  {shuffledGameWords.map((word) => {
+                    const used = gameAnswers.includes(word.s);
+
+                    return (
+                      <button
+                        key={word.s}
+                        disabled={used || selectedIndex === null}
+                        className={`${styles.wordButton} ${
+                          used ? styles.matchedWord : ""
+                        }`}
+                        onClick={() => handleMatchSanskritClick(word.s)}
+                      >
+                        {word.s}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  className={styles.actionButton}
+                  disabled={
+                    gameAnswers.some((answer) => answer === null) ||
+                    wrongAnswers.size > 0
+                  }
+                  onClick={checkMatchGame}
+                >
+                  CHECK
+                </button>
+              </>
+            )}
+
+            {/* FILL THE BLANK */}
+
+            {gameType === "fill" && fillTarget && (
+              <>
+                <div
+                  className={styles.verseBox}
+                  style={{
+                    marginTop: "24px",
+                  }}
+                >
+                  <p className={styles.sanskritText}>
+                    {gameWords
+                      .map((word, index) =>
+                        index === fillTargetIndex ? "‎ " : word.s,
+                      )
+                      .join(" ")}
+                  </p>
+
+                  <div className={styles.wordMeaning}>
+                    <span className={styles.meaningTranslation}>
+                      Hint: {fillTarget.g}
+                    </span>
+                  </div>
+                </div>
+
+                <div
+                  className={styles.wordGrid}
+                  style={{
+                    marginTop: "24px",
+                  }}
+                >
+                  {fillOptions.map((word) => {
+                    const selected = fillAnswer === word.s;
+
+                    const isCorrect = selected && fillResult === true;
+
+                    const isWrong = selected && fillResult === false;
+
+                    return (
+                      <button
+                        key={word.s}
+                        disabled={fillAnswer !== null}
+                        className={`${styles.wordButton} ${
+                          isCorrect ? styles.matchedWord : ""
+                        } ${isWrong ? styles.wrongMeaning : ""}`}
+                        onClick={() => handleFillAnswer(word.s)}
+                      >
+                        {word.s}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </>
         )}
 
@@ -808,27 +957,12 @@ export default function LevelOnePage() {
 
         {screen === "feedback" && (
           <>
-            <div
-              className={`${styles.feedbackBox} ${
-                lastAnswerCorrect
-                  ? styles.correctFeedback
-                  : styles.wrongFeedback
-              }`}
-            >
-              <div className={styles.feedbackIcon}>
-                {lastAnswerCorrect ? "✓" : "!"}
-              </div>
+            <div className={`${styles.feedbackBox} ${styles.correctFeedback}`}>
+              <div className={styles.feedbackIcon}>✓</div>
 
-              <h1>
-                {lastAnswerCorrect
-                  ? "Perfect!"
-                  : "Not quite"}
-              </h1>
+              <h1>Perfect!</h1>
 
-              <p>
-                You correctly rebuilt this part of
-                the verse.
-              </p>
+              <p>You completed this challenge correctly.</p>
             </div>
 
             <div
@@ -837,48 +971,13 @@ export default function LevelOnePage() {
                 marginTop: "20px",
               }}
             >
-              <p className={styles.tapHint}>
-                Correct translation pairs
-              </p>
+              <p className={styles.tapHint}>The line you just practiced</p>
 
-              <div className={styles.wordGrid}>
-                {currentRebuildWords.map(
-                  (word) => (
-                    <div
-                      key={word.s}
-                      className={
-                        styles.wordMeaning
-                      }
-                    >
-                      <span
-                        className={
-                          styles.meaningWord
-                        }
-                      >
-                        {word.s}
-                      </span>
-
-                      <span
-                        className={
-                          styles.meaningTranslation
-                        }
-                      >
-                        {word.g}
-                      </span>
-                    </div>
-                  )
-                )}
-              </div>
+              <p className={styles.sanskritText}>{gameLine.text}</p>
             </div>
 
-            <button
-              className={styles.actionButton}
-              onClick={moveToNextRebuildPart}
-            >
-              {rebuildPart <
-              rebuildParts.length - 1
-                ? "NEXT PART"
-                : "NEXT VERSE"}
+            <button className={styles.actionButton} onClick={handleNextVerse}>
+              NEXT VERSE
             </button>
           </>
         )}

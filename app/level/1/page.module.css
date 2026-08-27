@@ -1380,3 +1380,698 @@
     transform: translateX(0);
   }
 }
+
+/* =========================================================
+   REBUILD GAME – IMPROVED ANSWER SLOTS
+   ========================================================= */
+
+.rebuildSlots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  width: 100%;
+  margin-top: 28px;
+  margin-bottom: 8px;
+}
+
+/* Empty / filled answer slot */
+.rebuildSlot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 54px;
+  min-width: 78px;
+
+  padding: 10px 16px;
+
+  border: 2px dashed #d8c7a4;
+  border-radius: 14px;
+
+  background: rgba(255, 252, 244, 0.55);
+
+  color: var(--text);
+
+  font-size: 14px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+/* Remove the ugly dash from empty slots */
+.rebuildSlot:empty {
+  min-width: 68px;
+}
+
+/* Empty slot visual */
+.rebuildSlot.empty {
+  position: relative;
+}
+
+/* Small subtle baseline instead of "_" or "—" */
+.rebuildSlot.empty::after {
+  content: "";
+
+  width: 22px;
+  height: 2px;
+
+  border-radius: 999px;
+
+  background: #cdbb94;
+
+  opacity: 0.65;
+}
+
+/* When user has selected a word,
+   empty slots become more obviously interactive */
+.rebuildSlot.available {
+  border-color: #c79c4d;
+
+  background: #fffaf0;
+
+  animation: slotPulse 1.5s ease-in-out infinite;
+}
+
+.rebuildSlot.available:hover {
+  transform: translateY(-2px);
+
+  border-color: #b88732;
+
+  background: #fff5df;
+
+  box-shadow:
+    0 5px 0 rgba(181, 138, 61, 0.13);
+}
+
+/* Filled answer */
+.rebuildSlot.filled {
+  border-style: solid;
+  border-color: #ded6ca;
+
+  background: var(--surface);
+
+  box-shadow:
+    0 4px 0 rgba(73, 60, 48, 0.08);
+
+  animation: wordDrop 0.28s ease-out;
+}
+
+.rebuildSlot.filled:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 6px 0 rgba(73, 60, 48, 0.1);
+}
+
+/* Sanskrit word inside placed slot */
+.rebuildSlot .landedSanskrit {
+  font-size: 14px;
+  font-weight: 700;
+
+  color: var(--text);
+
+  line-height: 1.2;
+  text-align: center;
+
+  white-space: nowrap;
+}
+
+/* =========================================================
+   SELECTED WORD FROM WORD BANK
+   ========================================================= */
+
+.wordSelected {
+  transform: translateY(-3px);
+
+  border-color: #8d789f !important;
+
+  background: #eee7f3 !important;
+
+  box-shadow:
+    0 5px 0 rgba(98, 75, 117, 0.16);
+
+  animation: selectedWordPulse 1.2s ease-in-out infinite;
+}
+
+/* =========================================================
+   USED WORD
+   ========================================================= */
+
+.matchedWord {
+  opacity: 0.32;
+
+  transform: scale(0.96);
+
+  cursor: default;
+
+  pointer-events: none;
+}
+
+/* =========================================================
+   CORRECT REBUILD SLOT
+   ========================================================= */
+
+.rebuildSlot.correctMeaning {
+  border-color: #74b77a !important;
+
+  background: #dff2df !important;
+
+  color: #2f7136 !important;
+
+  animation: correctPop 0.35s ease-out;
+}
+
+.rebuildSlot.correctMeaning .landedSanskrit {
+  color: #27652e;
+}
+
+/* =========================================================
+   WRONG REBUILD SLOT
+   ========================================================= */
+
+.rebuildSlot.wrongMeaning {
+  border-color: #df7068 !important;
+
+  background: #ffe1df !important;
+
+  color: #a63f39 !important;
+
+  animation: wrongWiggle 0.55s ease-in-out;
+}
+
+.rebuildSlot.wrongMeaning .landedSanskrit {
+  color: #a63f39;
+}
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+
+@keyframes wordDrop {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.92);
+  }
+
+  70% {
+    transform: translateY(2px) scale(1.03);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slotPulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(199, 156, 77, 0);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 5px rgba(199, 156, 77, 0.08);
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes selectedWordPulse {
+  0%,
+  100% {
+    transform: translateY(-3px);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes correctPop {
+  0% {
+    transform: scale(0.92);
+  }
+
+  60% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* =========================================================
+   SUBTLE LEVEL 1 MOTION
+   ONLY ADD THESE NEW CLASSES
+   ========================================================= */
+
+
+/* ---------- PAGE ENTRANCE ---------- */
+
+/* Story: soft fade upward */
+.storyMotion {
+  animation: softFadeUp 0.35s ease-out both;
+}
+
+/* Learning line: simple fade, almost no movement */
+.learningMotion {
+  animation: softFade 0.25s ease-out both;
+}
+
+/* Pro tip: gentle reveal */
+.tipMotion {
+  animation: tipFadeIn 0.4s ease-out both;
+}
+
+/* Game screen: quick appearance */
+.gameMotion {
+  animation: softFadeUp 0.25s ease-out both;
+}
+
+/* Feedback: slightly more rewarding */
+.feedbackMotion {
+  animation: rewardEnter 0.35s ease-out both;
+}
+
+
+/* ---------- STORY BUTTON ---------- */
+
+.storyButton {
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.storyButton:hover {
+  transform: translateY(-1px);
+}
+
+.storyButton:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+
+/* ---------- LEARNING WORDS ---------- */
+
+/* Calm discovery feeling */
+.learningWord {
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.learningWord:hover {
+  transform: translateY(-2px);
+}
+
+.learningWord:active {
+  transform: scale(0.96);
+}
+
+
+/* ---------- PRO TIP ---------- */
+
+/* Small icon reaction only */
+.tipIconMotion {
+  transition: transform 0.2s ease;
+}
+
+.tipIconMotion:hover {
+  transform: rotate(6deg) scale(1.05);
+}
+
+
+/* ---------- REBUILD ---------- */
+
+/* Keep your existing rebuild animations.
+   Only adds a tiny press feeling to word buttons. */
+.rebuildWord {
+  transition: transform 0.15s ease;
+}
+
+.rebuildWord:active {
+  transform: scale(0.94);
+}
+
+
+/* ---------- MATCH ---------- */
+
+/* Match should feel like a connection:
+   selected card moves slightly right */
+.matchSelected {
+  animation: matchNudge 0.22s ease-out both;
+}
+
+/* Correct pair gets one quick pulse */
+.matchCorrect {
+  animation: matchLock 0.3s ease-out both;
+}
+
+
+/* ---------- FILL BLANK ---------- */
+
+/* Answer feels like it drops into the blank */
+.fillSelected {
+  animation: fillTap 0.2s ease-out both;
+}
+
+
+/* ---------- FEEDBACK ---------- */
+
+/* Only the success icon gets the celebration */
+.feedbackIconMotion {
+  animation: successPopSmall 0.4s ease-out both;
+}
+
+
+/* =========================================================
+   KEYFRAMES
+   ========================================================= */
+
+@keyframes softFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes softFade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes tipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rewardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes matchNudge {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes matchLock {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.025);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes fillTap {
+  0% {
+    transform: translateY(0);
+  }
+
+  45% {
+    transform: translateY(-4px);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes successPopSmall {
+  0% {
+    transform: scale(0.85);
+  }
+
+  70% {
+    transform: scale(1.06);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* =========================================================
+   PRO TIP POPUP
+   ========================================================= */
+
+.proTipPopup {
+  width: 100%;
+  max-width: 720px;
+
+  margin: 28px auto 24px;
+
+  padding: 28px;
+
+  background: var(--surface);
+  border: 1px solid rgba(196, 157, 77, 0.32);
+  border-radius: 24px;
+
+  box-shadow:
+    0 14px 35px rgba(74, 55, 30, 0.08),
+    0 3px 8px rgba(74, 55, 30, 0.05);
+
+  animation: proTipPopupEnter 0.38s ease-out both;
+}
+
+
+/* ---------- TOP ---------- */
+
+.proTipPopupTop {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  padding-bottom: 22px;
+
+  border-bottom: 1px solid rgba(196, 157, 77, 0.2);
+}
+
+
+/* Lightbulb */
+
+.proTipPopup .tipIcon {
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 58px;
+  height: 58px;
+
+  font-size: 27px;
+
+  border-radius: 18px;
+
+  background: rgba(245, 221, 164, 0.45);
+
+  animation: proTipIconPop 0.42s ease-out both;
+  animation-delay: 0.12s;
+}
+
+
+/* Small verse label */
+
+.proTipEyebrow {
+  margin: 0 0 4px;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  letter-spacing: 0.12em;
+
+  color: #a57d35;
+}
+
+
+/* Pro Tip title */
+
+.proTipPopup h1 {
+  margin: 0;
+
+  animation: none;
+}
+
+
+/* ---------- MAIN CONTENT ---------- */
+
+.proTipContent {
+  padding-top: 24px;
+
+  animation: proTipContentEnter 0.35s ease-out both;
+  animation-delay: 0.14s;
+}
+
+
+/* Main insight */
+
+.proTipText {
+  margin: 0;
+
+  font-size: 18px;
+  line-height: 1.7;
+
+  color: var(--text);
+}
+
+
+/* ---------- TRY THIS ---------- */
+
+.proTipApply {
+  margin-top: 24px;
+  padding-top: 20px;
+
+  border-top: 1px dashed rgba(196, 157, 77, 0.32);
+}
+
+
+.proTipApply span {
+  display: block;
+
+  margin-bottom: 8px;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  letter-spacing: 0.12em;
+
+  color: #a57d35;
+}
+
+
+.proTipApply p {
+  margin: 0;
+
+  font-size: 15px;
+  line-height: 1.65;
+
+  color: var(--text);
+}
+
+
+/* =========================================================
+   SUBTLE POPUP ANIMATION
+   ========================================================= */
+
+@keyframes proTipPopupEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+
+@keyframes proTipIconPop {
+  from {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+
+@keyframes proTipContentEnter {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+  .proTipPopup {
+    margin-top: 20px;
+
+    padding: 22px 18px;
+
+    border-radius: 20px;
+  }
+
+  .proTipPopupTop {
+    gap: 13px;
+
+    padding-bottom: 18px;
+  }
+
+  .proTipPopup .tipIcon {
+    width: 50px;
+    height: 50px;
+
+    font-size: 23px;
+
+    border-radius: 15px;
+  }
+
+  .proTipText {
+    font-size: 16px;
+  }
+}
+
+.proTipButton {
+  width: 100%;
+  margin-top: 28px;
+}
