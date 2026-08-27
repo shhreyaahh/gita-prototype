@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import styles from "./page.module.css";
 import { level1 } from "../../../data/level1";
@@ -8,7 +8,7 @@ import { level1 } from "../../../data/level1";
 type Word = {
   s: string;
   g: string;
-  fn?: number;
+  fn?: number; // connector flag - locked, never quizzed
 };
 
 type RawLine = {
@@ -27,505 +27,765 @@ type Lesson = {
   teaching?: string;
   apply?: string;
   proTip?: string;
-
   lines: RawLine[];
-
-  test?: {
-    question: string;
-    options: string[];
-    correctAnswer: string;
-    explanation: string;
-  };
 };
 
-type Screen = "story" | "line" | "tip" | "game" | "feedback" | "complete";
+type Line = { text: string; words: Word[] };
 
-type GameType = "rebuild" | "match" | "fill";
+/*
+  STEP SEQUENCE (per verse):
+
+  intro
+  learn(line0), rebuild(line0)
+  learn(line1), rebuild(line1)
+  ...repeats per line...
+  match   <- ONE match game, pulled from every line combined (max 4 pairs)
+  fill    <- ONE fill-in-the-blank, on the line with the most content words
+  master  <- ONE final rebuild of the WHOLE verse, all lines combined
+*/
+type Step =
+  | { type: "intro" }
+  | { type: "learn"; line: number }
+  | { type: "rebuild"; line: number }
+  | { type: "match" }
+  | { type: "fill" }
+  | { type: "master" };
+
+const isConnector = (w: Word) => !!w.fn;
 
 function shuffle<T>(items: T[]) {
   return [...items].sort(() => Math.random() - 0.5);
 }
 
-export default function LevelOnePage() {
-  const lessons = level1 as Lesson[];
+function contentWords(words: Word[]) {
+  const c = words.filter((w) => !isConnector(w));
+  return c.length ? c : words;
+}
 
-  const [lessonIndex, setLessonIndex] = useState(0);
-  const [screen, setScreen] = useState<Screen>("story");
+/*
+  A speaker tag ("dhṛtarāṣṭra uvāca" - name + "said") sometimes sits as its
+  own entry in a verse's lines[]. It's not a real pāda of the shloka, so it
+  should never get its own learn/rebuild part or be quizzed. Heuristic: a
+  LEADING line with 2 or fewer words is treated as attribution, not content.
+*/
+function isSpeakerLine(line: Line) {
+  return line.words.length > 0 && line.words.length <= 2;
+}
 
-  const [lineIndex, setLineIndex] = useState(0);
-
-  const [selectedWord, setSelectedWord] = useState<Word | null>(null);
-
-  const [hearts, setHearts] = useState(10);
-  const [score, setScore] = useState(0);
-
-  /*
-    GAME STATE
-  */
-
-  // Rebuild + Match
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-
-  const [gameAnswers, setGameAnswers] = useState<(string | null)[]>([]);
-
-  const [lockedAnswers, setLockedAnswers] = useState<Set<number>>(new Set());
-
-  const [wrongAnswers, setWrongAnswers] = useState<Set<number>>(new Set());
-
-  // Fill
-  const [fillAnswer, setFillAnswer] = useState<string | null>(null);
-
-  const [fillResult, setFillResult] = useState<boolean | null>(null);
-
-  const lesson = lessons[lessonIndex];
-
-  const lines = (lesson?.lines ?? []).map((line) => ({
+function countStepsForLesson(lesson: Lesson) {
+  const normalized: Line[] = (lesson.lines ?? []).map((line) => ({
     text: line.text ?? line.t ?? "",
     words: line.words ?? line.ws ?? [],
   }));
+  const hasSpeakerLine = normalized.length > 1 && isSpeakerLine(normalized[0]);
+  const n = hasSpeakerLine ? normalized.length - 1 : normalized.length;
+  return 1 /* intro */ + 2 * n /* learn+rebuild per line */ + 3 /* match+fill+master */;
+}
 
-  const currentLine = lines[lineIndex];
+/* ---------------------------------------------------------------------- */
+/* INTRO - flip card. Front: sanskrit + meaning. Back: story + teaching + apply. */
+/* ---------------------------------------------------------------------- */
+function Intro({
+  lesson,
+  lines,
+  speakerLine,
+  onDone,
+}: {
+  lesson: Lesson;
+  lines: Line[];
+  speakerLine: Line | null;
+  onDone: () => void;
+}) {
+  const [flipped, setFlipped] = useState(false);
 
-  /*
-    GAME ROTATION
+  return (
+    <>
+      <div className={styles.sectionPill}>VERSE {lesson.ref}</div>
+      <p className={styles.screenType}>THE WHOLE VERSE</p>
+      <h1>{lesson.title}</h1>
 
-    Verse 1 → Rebuild
-    Verse 2 → Match
-    Verse 3 → Fill
-    Verse 4 → Rebuild
-    ...
-  */
-  const gameType: GameType =
-    lessonIndex % 3 === 0
-      ? "rebuild"
-      : lessonIndex % 3 === 1
-        ? "match"
-        : "fill";
+      {!flipped ? (
+        <>
+          <div className={styles.verseBox}>
+            {speakerLine && (
+              <p className={styles.tapHint} style={{ fontStyle: "italic" }}>
+                {speakerLine.text}
+              </p>
+            )}
+            {lines.map((line, i) => (
+              <p key={i} className={styles.sanskritText}>
+                {line.text}
+              </p>
+            ))}
+          </div>
 
-  /*
-    IMPORTANT:
+          <div className={styles.meaningBox}>
+            <span>WHAT IT MEANS</span>
+            <p>{lesson.meaning}</p>
+          </div>
+        </>
+      ) : (
+        <div className={styles.proTipPopup}>
+          <div className={styles.proTipPopupTop}>
+            <div className={styles.tipIcon}>📖</div>
+            <div>
+              <p className={styles.proTipEyebrow}>VERSE {lesson.ref}</p>
+              <h1>The Story</h1>
+            </div>
+          </div>
 
-    We do NOT test the entire verse in one giant
-    13-word game.
+          <div className={styles.proTipContent}>
+            <p className={styles.proTipText}>{lesson.story}</p>
 
-    We choose ONE manageable line from the verse
-    for the game.
-  */
-  const gameLineIndex = lines.length > 0 ? lessonIndex % lines.length : 0;
+            {lesson.teaching && (
+              <div className={styles.proTipApply} style={{ marginTop: 20 }}>
+                <span>THE TEACHING</span>
+                <p>{lesson.teaching}</p>
+              </div>
+            )}
 
-  const gameLine = lines[gameLineIndex] ?? {
-    text: "",
-    words: [],
-  };
+            {lesson.apply && (
+              <div className={styles.proTipApply}>
+                <span>FOR YOU, TODAY</span>
+                <p>{lesson.apply}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
-  const gameWords = gameLine.words;
+      <button
+        className={styles.tapHint}
+        style={{ background: "none", border: "none", cursor: "pointer", display: "block" }}
+        onClick={() => setFlipped((f) => !f)}
+      >
+        {flipped ? "TAP TO RETURN ↻" : "TAP FOR THE STORY ↻"}
+      </button>
 
-  /*
-    Stable shuffled game options.
-    They only change when moving to another verse.
-  */
-  const shuffledGameWords = useMemo(() => {
-    return shuffle(gameWords);
-  }, [lessonIndex]);
+      <button className={styles.actionButton} onClick={onDone}>
+        BREAK IT DOWN
+      </button>
+    </>
+  );
+}
 
-  /*
-    FILL GAME TARGET
+/* ---------------------------------------------------------------------- */
+/* LEARN - one line. Tap a word to reveal it (sanskrit + gloss) in the     */
+/* single reveal card below. Continue unlocks once every word's been seen. */
+/* ---------------------------------------------------------------------- */
+function LearnPart({
+  line,
+  part,
+  total,
+  onDone,
+}: {
+  line: Line;
+  part: number;
+  total: number;
+  onDone: () => void;
+}) {
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [viewed, setViewed] = useState<Set<number>>(new Set());
 
-    One word is removed from the selected line.
-  */
-  const fillTargetIndex =
-    gameWords.length > 0 ? lessonIndex % gameWords.length : 0;
-
-  const fillTarget = gameWords[fillTargetIndex];
-
-  const fillOptions = useMemo(() => {
-    if (!fillTarget) return [];
-
-    const verseWords = lines.flatMap((line) => line.words);
-
-    const distractors = shuffle(
-      verseWords.filter((word) => word.s !== fillTarget.s),
-    ).slice(0, 3);
-
-    return shuffle([fillTarget, ...distractors]);
-  }, [lessonIndex, fillTargetIndex]);
-
-  /*
-    PROGRESS
-
-    Per verse:
-
-    Story
-    Line 1
-    Line 2
-    Line 3
-    Pro Tip
-    Game
-    Feedback
-  */
-  const totalSteps = lessons.reduce((total, item) => {
-    return total + item.lines.length + 4;
-  }, 0);
-
-  const completedBefore = lessons
-    .slice(0, lessonIndex)
-    .reduce((total, item) => {
-      return total + item.lines.length + 4;
-    }, 0);
-
-  let currentStep = completedBefore;
-
-  if (screen === "story") {
-    currentStep += 1;
+  function tapWord(i: number) {
+    setSelectedIndex(i);
+    setViewed((prev) => new Set(prev).add(i));
   }
 
-  if (screen === "line") {
-    currentStep += 1 + lineIndex;
+  const selected = selectedIndex !== null ? line.words[selectedIndex] : null;
+  const allViewed = line.words.length > 0 && viewed.size === line.words.length;
+
+  return (
+    <>
+      <div className={styles.sectionPill}>WORD BY WORD</div>
+      <p className={styles.screenType}>
+        PART {part} OF {total}
+      </p>
+      <h1>{line.text}</h1>
+
+      <div className={styles.verseBox}>
+        <p className={styles.tapHint}>Tap each word to see its meaning</p>
+
+        <div className={styles.wordGrid}>
+          {line.words.map((word, i) => (
+            <button
+              key={`${word.s}-${i}`}
+              onClick={() => tapWord(i)}
+              className={`${styles.wordButton} ${
+                selectedIndex === i ? styles.wordSelected : ""
+              }`}
+            >
+              {word.s}
+            </button>
+          ))}
+        </div>
+
+        {selected && (
+          <div className={styles.wordMeaning}>
+            <strong>{selected.s}</strong>
+            <span>
+              {isConnector(selected) ? `${selected.g} · connector` : selected.g}
+            </span>
+          </div>
+        )}
+      </div>
+
+      <button className={styles.actionButton} disabled={!allViewed} onClick={onDone}>
+        GOT IT
+      </button>
+    </>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* ARRANGE - rebuild game. Used for BOTH the per-line rebuild AND the      */
+/* final master step (whole verse). Connectors are pre-locked in place    */
+/* and never quizzed. Has its own try-limit, separate from lesson hearts. */
+/* Hearts are only docked (via onContinue(false)) if the tries run out.   */
+/* ---------------------------------------------------------------------- */
+function Arrange({
+  words,
+  prompt,
+  hint,
+  onContinue,
+}: {
+  words: Word[];
+  prompt: string;
+  hint: string;
+  onContinue: (ok: boolean) => void;
+}) {
+  const solution = useMemo(() => words.map((w) => w.s), [words]);
+  const glosses = useMemo(() => words.map((w) => w.g), [words]);
+  const N = words.length;
+
+  const preLocked = useMemo(
+    () => new Set(words.map((w, i) => (isConnector(w) ? i : -1)).filter((i) => i >= 0)),
+    [words],
+  );
+
+  const maxTries = Math.max(3, Math.ceil((N - preLocked.size) / 3));
+
+  const initialPool = useMemo(
+    () =>
+      shuffle(
+        words.map((w, i) => ({ id: i, text: w.s })).filter((t) => !preLocked.has(t.id)),
+      ),
+    [words], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+
+  const [slots, setSlots] = useState<({ id: number; text: string } | null)[]>(() =>
+    words.map((w, i) => (preLocked.has(i) ? { id: i, text: w.s } : null)),
+  );
+  const [pool, setPool] = useState(initialPool);
+  const [locked, setLocked] = useState<Set<number>>(new Set(preLocked));
+  const [flash, setFlash] = useState<Set<number>>(new Set());
+  const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
+  const [tries, setTries] = useState(0);
+  const [status, setStatus] = useState<"playing" | "solved" | "revealed">("playing");
+
+  function firstEmpty() {
+    return slots.findIndex((s, i) => s === null && !locked.has(i));
   }
 
-  if (screen === "tip") {
-    currentStep += 1 + lines.length;
+  function placeTile(tile: { id: number; text: string }) {
+    if (status !== "playing") return;
+    const idx = selectedSlot !== null && slots[selectedSlot] === null ? selectedSlot : firstEmpty();
+    if (idx === -1) return;
+
+    setSlots((prev) => {
+      const next = [...prev];
+      next[idx] = tile;
+      return next;
+    });
+    setPool((prev) => prev.filter((t) => t.id !== tile.id));
+    setSelectedSlot(null);
   }
 
-  if (screen === "game") {
-    currentStep += 2 + lines.length;
-  }
+  function onSlotTap(i: number) {
+    if (status !== "playing" || locked.has(i)) return;
 
-  if (screen === "feedback") {
-    currentStep += 3 + lines.length;
-  }
-
-  const progress =
-    totalSteps > 0 ? Math.min((currentStep / totalSteps) * 100, 100) : 0;
-
-  /*
-    STORY
-  */
-  function handleContinueStory() {
-    setLineIndex(0);
-    setSelectedWord(null);
-
-    if (lines.length > 0) {
-      setScreen("line");
+    if (slots[i]) {
+      const tile = slots[i]!;
+      setSlots((prev) => {
+        const next = [...prev];
+        next[i] = null;
+        return next;
+      });
+      setPool((prev) => [...prev, tile]);
     } else {
-      setScreen("tip");
+      setSelectedSlot((sel) => (sel === i ? null : i));
     }
   }
 
-  /*
-    LINE LEARNING
-  */
-  function handleContinueLine() {
-    if (!selectedWord) return;
+  function check() {
+    if (slots.some((s) => s === null)) return;
 
-    const isLastLine = lineIndex >= lines.length - 1;
+    const correct = new Set(locked);
+    const wrong: number[] = [];
 
-    if (isLastLine) {
-      setSelectedWord(null);
-      setScreen("tip");
-      return;
-    }
-
-    setLineIndex((previous) => previous + 1);
-    setSelectedWord(null);
-  }
-
-  /*
-    START GAME
-  */
-  function startGame() {
-    setSelectedIndex(null);
-
-    setGameAnswers(Array(gameWords.length).fill(null));
-
-    setLockedAnswers(new Set());
-    setWrongAnswers(new Set());
-
-    setFillAnswer(null);
-    setFillResult(null);
-
-    setScreen("game");
-  }
-
-  /*
-    =========================
-    REBUILD GAME
-    =========================
-
-    Tap Sanskrit word
-    ↓
-    Tap correct position
-  */
-  function handleRebuildWordClick(word: string) {
-    if (gameAnswers.includes(word)) return;
-
-    const wordIndex = shuffledGameWords.findIndex((item) => item.s === word);
-
-    setSelectedIndex(wordIndex);
-  }
-
-  function handleRebuildSlotClick(index: number) {
-    if (lockedAnswers.has(index)) return;
-
-    if (gameAnswers[index] !== null) {
-      setGameAnswers((previous) => {
-        const updated = [...previous];
-        updated[index] = null;
-        return updated;
-      });
-
-      return;
-    }
-
-    if (selectedIndex === null) return;
-
-    const selected = shuffledGameWords[selectedIndex];
-
-    if (!selected) return;
-
-    setGameAnswers((previous) => {
-      const updated = [...previous];
-
-      const existingIndex = updated.findIndex(
-        (answer) => answer === selected.s,
-      );
-
-      if (
-        existingIndex !== -1 &&
-        existingIndex !== index &&
-        !lockedAnswers.has(existingIndex)
-      ) {
-        updated[existingIndex] = null;
-      }
-
-      updated[index] = selected.s;
-
-      return updated;
+    slots.forEach((s, i) => {
+      if (s!.text === solution[i]) correct.add(i);
+      else if (!locked.has(i)) wrong.push(i);
     });
 
-    setSelectedIndex(null);
-  }
-
-  function checkRebuildGame() {
-    if (
-      gameAnswers.length === 0 ||
-      gameAnswers.some((answer) => answer === null)
-    ) {
+    if (correct.size === N) {
+      setLocked(correct);
+      setStatus("solved");
       return;
     }
 
-    const correct = new Set<number>();
-    const wrong = new Set<number>();
+    const used = tries + 1;
+    setTries(used);
 
-    gameWords.forEach((word, index) => {
-      if (gameAnswers[index] === word.s) {
-        correct.add(index);
-      } else {
-        wrong.add(index);
+    if (used >= maxTries) {
+      setSlots(solution.map((text, i) => ({ id: i, text })));
+      setLocked(new Set(solution.map((_, i) => i)));
+      setPool([]);
+      setStatus("revealed");
+      return;
+    }
+
+    setLocked(correct);
+    setFlash(new Set(wrong));
+    const bounced = wrong.map((i) => slots[i]!);
+
+    setTimeout(() => {
+      setSlots((prev) => prev.map((s, i) => (wrong.includes(i) ? null : s)));
+      setPool((prev) => [...prev, ...bounced]);
+      setFlash(new Set());
+    }, 550);
+  }
+
+  const filledAll = slots.every((s) => s !== null);
+  const triesLeft = Math.max(maxTries - tries, 0);
+
+  return (
+    <>
+      <div className={styles.sectionPill}>TEST YOURSELF</div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "baseline",
+        }}
+      >
+        <h1>{prompt}</h1>
+        {status === "playing" && (
+          <span style={{ fontSize: 13, letterSpacing: 2 }}>
+            {"◆".repeat(triesLeft)}
+            <span style={{ opacity: 0.3 }}>{"◇".repeat(tries)}</span>
+          </span>
+        )}
+      </div>
+      {hint && <p className={styles.tapHint}>&ldquo;{hint}&rdquo;</p>}
+
+      <div className={styles.rebuildSlots}>
+        {slots.map((tile, i) => {
+          const isPre = preLocked.has(i);
+          const isLocked = locked.has(i);
+          const isFlash = flash.has(i);
+          const isSel = selectedSlot === i;
+
+          return (
+            <button
+              key={i}
+              disabled={status !== "playing" || isPre || isLocked}
+              onClick={() => onSlotTap(i)}
+              className={`${styles.rebuildSlot} ${
+                tile ? styles.filled : styles.empty
+              } ${!tile && isSel ? styles.available : ""} ${
+                isLocked ? styles.correctMeaning : ""
+              } ${isFlash ? styles.wrongMeaning : ""}`}
+              style={{ opacity: isPre ? 0.65 : 1 }}
+            >
+              {tile && (
+                <span className={styles.landedSanskrit} style={{ borderTop: "none" }}>
+                  {tile.text}
+                </span>
+              )}
+              {isPre && (
+                <span style={{ display: "block", fontSize: 10.5, marginTop: 3 }}>
+                  {glosses[i]} · connector
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className={styles.wordGrid} style={{ marginTop: 18 }}>
+        {pool.map((tile) => (
+          <button key={tile.id} className={styles.wordButton} onClick={() => placeTile(tile)}>
+            {tile.text}
+          </button>
+        ))}
+      </div>
+
+      {status === "playing" ? (
+        <button className={styles.actionButton} disabled={!filledAll} onClick={check}>
+          CHECK
+        </button>
+      ) : (
+        <>
+          <div
+            className={`${styles.feedbackBox} ${
+              status === "solved" ? styles.correctFeedback : styles.wrongFeedback
+            }`}
+            style={{ marginTop: 16 }}
+          >
+            <h2>{status === "solved" ? "Correct!" : "Here's the answer"}</h2>
+            {status === "revealed" && <p>{solution.join(" ")}</p>}
+          </div>
+          <button
+            className={styles.actionButton}
+            onClick={() => onContinue(status === "solved")}
+          >
+            CONTINUE
+          </button>
+        </>
+      )}
+    </>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* MATCH - ONE per verse. Pulled from every line combined, connectors     */
+/* dropped, deduped, capped at 4 pairs. Tap a meaning card, then tap the  */
+/* matching Sanskrit tile from the word bank below. Mismatches are free - */
+/* no tries, no heart cost - only reaching "solved" advances.             */
+/* ---------------------------------------------------------------------- */
+function MatchPairs({
+  words,
+  onContinue,
+}: {
+  words: Word[];
+  onContinue: (ok: boolean) => void;
+}) {
+  const subset = useMemo(() => {
+    const uniq: Word[] = [];
+    const seenS = new Set<string>();
+    const seenG = new Set<string>();
+
+    for (const w of shuffle(words.filter((w) => !isConnector(w)))) {
+      if (!seenS.has(w.s) && !seenG.has(w.g)) {
+        uniq.push(w);
+        seenS.add(w.s);
+        seenG.add(w.g);
       }
-    });
-
-    setLockedAnswers(correct);
-    setWrongAnswers(wrong);
-
-    if (wrong.size === 0) {
-      handleGameSuccess();
-      return;
+      if (uniq.length === 4) break;
     }
 
-    handleGameWrong(wrong);
-  }
+    return uniq;
+  }, [words]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  /*
-    =========================
-    MATCH GAME
-    =========================
+  const bank = useMemo(
+    () => shuffle(subset.map((w, i) => ({ id: i, text: w.s }))),
+    [subset],
+  );
 
-    Tap English meaning
-    ↓
-    Tap matching Sanskrit word
-  */
-  function handleMatchMeaningClick(index: number) {
-    if (lockedAnswers.has(index)) return;
-    if (wrongAnswers.has(index)) return;
+  const [answers, setAnswers] = useState<(string | null)[]>(() =>
+    Array(subset.length).fill(null),
+  );
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [locked, setLocked] = useState<Set<number>>(new Set());
+  const [wrong, setWrong] = useState<Set<number>>(new Set());
 
-    if (gameAnswers[index] !== null) {
-      setGameAnswers((previous) => {
-        const updated = [...previous];
-        updated[index] = null;
-        return updated;
+  function tapMeaning(i: number) {
+    if (locked.has(i) || wrong.has(i)) return;
+
+    if (answers[i]) {
+      setAnswers((prev) => {
+        const next = [...prev];
+        next[i] = null;
+        return next;
       });
-
       setSelectedIndex(null);
       return;
     }
 
-    setSelectedIndex(index);
+    setSelectedIndex(i);
   }
 
-  function handleMatchSanskritClick(word: string) {
+  function tapWord(text: string) {
     if (selectedIndex === null) return;
 
-    setGameAnswers((previous) => {
-      const updated = [...previous];
-
-      const existingIndex = updated.findIndex((answer) => answer === word);
-
-      if (
-        existingIndex !== -1 &&
-        existingIndex !== selectedIndex &&
-        !lockedAnswers.has(existingIndex)
-      ) {
-        updated[existingIndex] = null;
+    setAnswers((prev) => {
+      const next = [...prev];
+      const existing = next.findIndex((a) => a === text);
+      if (existing !== -1 && existing !== selectedIndex && !locked.has(existing)) {
+        next[existing] = null;
       }
-
-      updated[selectedIndex] = word;
-
-      return updated;
+      next[selectedIndex] = text;
+      return next;
     });
-
     setSelectedIndex(null);
   }
 
-  function checkMatchGame() {
-    if (
-      gameAnswers.length === 0 ||
-      gameAnswers.some((answer) => answer === null)
-    ) {
-      return;
-    }
+  function check() {
+    if (answers.some((a) => a === null)) return;
 
-    const correct = new Set<number>();
-    const wrong = new Set<number>();
+    const correct = new Set(locked);
+    const wrongNow: number[] = [];
 
-    gameWords.forEach((word, index) => {
-      if (gameAnswers[index] === word.s) {
-        correct.add(index);
-      } else {
-        wrong.add(index);
-      }
+    subset.forEach((w, i) => {
+      if (answers[i] === w.s) correct.add(i);
+      else if (!locked.has(i)) wrongNow.push(i);
     });
 
-    setLockedAnswers(correct);
-    setWrongAnswers(wrong);
-
-    if (wrong.size === 0) {
-      handleGameSuccess();
+    if (correct.size === subset.length) {
+      setLocked(correct);
+      setTimeout(() => onContinue(true), 500);
       return;
     }
 
-    handleGameWrong(wrong);
+    setLocked(correct);
+    setWrong(new Set(wrongNow));
+
+    setTimeout(() => {
+      setAnswers((prev) => prev.map((a, i) => (wrongNow.includes(i) ? null : a)));
+      setWrong(new Set());
+    }, 650);
   }
 
-  /*
-    =========================
-    FILL GAME
-    =========================
-  */
-  function handleFillAnswer(word: string) {
-    if (!fillTarget) return;
-    if (fillAnswer !== null) return;
+  const filledAll = answers.every((a) => a !== null);
+  const usedTexts = new Set(answers.filter(Boolean) as string[]);
 
-    const isCorrect = word === fillTarget.s;
+  return (
+    <>
+      <div className={styles.sectionPill}>TEST YOURSELF</div>
+      <p className={styles.screenType}>MATCH</p>
+      <h1>Match the meanings</h1>
+      <p className={styles.tapHint}>Tap a meaning, then tap its matching Sanskrit word.</p>
 
-    setFillAnswer(word);
-    setFillResult(isCorrect);
+      <div className={styles.options}>
+        {subset.map((w, i) => {
+          const answer = answers[i];
+          const isLocked = locked.has(i);
+          const isWrong = wrong.has(i);
 
-    if (isCorrect) {
-      handleGameSuccess();
-      return;
+          return (
+            <button
+              key={i}
+              disabled={isLocked}
+              onClick={() => tapMeaning(i)}
+              className={`${styles.option} ${selectedIndex === i ? styles.selected : ""} ${
+                answer ? styles.filledMeaning : ""
+              } ${isLocked ? styles.correctMeaning : ""} ${isWrong ? styles.wrongMeaning : ""}`}
+            >
+              <span className={styles.englishMeaning}>{w.g}</span>
+              {answer && <span className={styles.landedSanskrit}>{answer}</span>}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className={styles.wordGrid} style={{ marginTop: 20 }}>
+        {bank.map((tile) => {
+          const used = usedTexts.has(tile.text);
+          return (
+            <button
+              key={tile.id}
+              disabled={used || selectedIndex === null}
+              onClick={() => tapWord(tile.text)}
+              className={`${styles.wordButton} ${used ? styles.matchedWord : ""}`}
+            >
+              {tile.text}
+            </button>
+          );
+        })}
+      </div>
+
+      <button className={styles.actionButton} disabled={!filledAll} onClick={check}>
+        CHECK
+      </button>
+    </>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* FILL - ONE per verse. Targets the line with the most content words,    */
+/* blanks its single longest content word. Wrong answer costs one heart.  */
+/* ---------------------------------------------------------------------- */
+function FillBlank({
+  lines,
+  fillLineIndex,
+  onContinue,
+}: {
+  lines: Line[];
+  fillLineIndex: number;
+  onContinue: (ok: boolean) => void;
+}) {
+  const line = lines[fillLineIndex];
+
+  const content = useMemo(() => contentWords(line.words), [line]);
+  const target = useMemo(
+    () => content.reduce((a, b) => (b.s.length > a.s.length ? b : a)),
+    [content],
+  );
+  const targetIndex = useMemo(
+    () => line.words.findIndex((w) => w.s === target.s),
+    [line, target],
+  );
+
+  const options = useMemo(() => {
+    const verseWords = lines.flatMap((l) => l.words);
+    let others = shuffle(content.filter((w) => w.s !== target.s)).slice(0, 2);
+
+    if (others.length < 2) {
+      const extra = shuffle(
+        verseWords.filter((w) => w.s !== target.s && !others.some((o) => o.s === w.s)),
+      ).slice(0, 2 - others.length);
+      others = others.concat(extra);
     }
 
-    setHearts((previous) => Math.max(previous - 1, 0));
+    return shuffle([target, ...others]);
+  }, [line, target, content, lines]);
 
-    setTimeout(() => {
-      setFillAnswer(null);
-      setFillResult(null);
-    }, 650);
+  const [choice, setChoice] = useState<string | null>(null);
+  const [checked, setChecked] = useState<boolean | null>(null);
+
+  function check() {
+    setChecked(choice === target.s);
   }
 
-  /*
-    =========================
-    GAME SUCCESS
-    =========================
-  */
-  function handleGameSuccess() {
-    setScore((previous) => previous + 1);
+  return (
+    <>
+      <div className={styles.sectionPill}>TEST YOURSELF</div>
+      <p className={styles.screenType}>FILL THE BLANK</p>
+      <h1>Fill in the missing word</h1>
 
-    setHearts((previous) => Math.min(previous + 1, 10));
+      <div className={styles.verseBox} style={{ marginTop: 14 }}>
+        <p className={styles.sanskritText}>
+          {line.words.map((w, i) => (i === targetIndex ? "____" : w.s)).join(" ")}
+        </p>
+        <div className={styles.wordMeaning}>
+          <span>Hint: {target.g}</span>
+        </div>
+      </div>
 
-    setTimeout(() => {
-      setScreen("feedback");
-    }, 650);
+      <div className={styles.wordGrid} style={{ marginTop: 18 }}>
+        {options.map((o) => (
+          <button
+            key={o.s}
+            disabled={checked !== null}
+            onClick={() => checked === null && setChoice(o.s)}
+            className={`${styles.wordButton} ${choice === o.s ? styles.wordSelected : ""}`}
+          >
+            {o.s}
+          </button>
+        ))}
+      </div>
+
+      {checked === null ? (
+        <button className={styles.actionButton} disabled={!choice} onClick={check}>
+          CHECK
+        </button>
+      ) : (
+        <>
+          <div
+            className={`${styles.feedbackBox} ${
+              checked ? styles.correctFeedback : styles.wrongFeedback
+            }`}
+            style={{ marginTop: 16 }}
+          >
+            <h2>{checked ? "Correct!" : "Not quite"}</h2>
+            {!checked && <p>Answer: {target.s}</p>}
+          </div>
+          <button className={styles.actionButton} onClick={() => onContinue(checked!)}>
+            CONTINUE
+          </button>
+        </>
+      )}
+    </>
+  );
+}
+
+/* ---------------------------------------------------------------------- */
+/* ROOT PAGE                                                              */
+/* ---------------------------------------------------------------------- */
+export default function LevelOnePage() {
+  const lessons = level1 as Lesson[];
+
+  const [lessonIndex, setLessonIndex] = useState(0);
+  const [stepIndex, setStepIndex] = useState(0);
+  const [hearts, setHearts] = useState(5);
+  const [mistakes, setMistakes] = useState(0);
+  const [score, setScore] = useState(0);
+  const [isLevelComplete, setIsLevelComplete] = useState(false);
+
+  const lesson = lessons[lessonIndex];
+
+  const lines: Line[] = useMemo(
+    () =>
+      (lesson?.lines ?? []).map((line) => ({
+        text: line.text ?? line.t ?? "",
+        words: line.words ?? line.ws ?? [],
+      })),
+    [lesson],
+  );
+
+  // A leading speaker tag (e.g. "dhṛtarāṣṭra uvāca") is attribution, not a
+  // real pāda - pull it out so it's shown but never taught as its own part.
+  const speakerLine = useMemo(
+    () => (lines.length > 1 && isSpeakerLine(lines[0]) ? lines[0] : null),
+    [lines],
+  );
+  const teachableLines = useMemo(
+    () => (speakerLine ? lines.slice(1) : lines),
+    [lines, speakerLine],
+  );
+
+  const steps: Step[] = useMemo(() => {
+    const parts: Step[] = [];
+    teachableLines.forEach((_, i) => {
+      parts.push({ type: "learn", line: i });
+      parts.push({ type: "rebuild", line: i });
+    });
+    return [{ type: "intro" }, ...parts, { type: "match" }, { type: "fill" }, { type: "master" }];
+  }, [teachableLines]);
+
+  const fillLineIndex = useMemo(() => {
+    if (teachableLines.length === 0) return 0;
+    return teachableLines.reduce((best, line, i, arr) => {
+      const c = contentWords(line.words).length;
+      const bc = contentWords(arr[best].words).length;
+      return c > bc ? i : best;
+    }, 0);
+  }, [teachableLines]);
+
+  // Hearts reset per verse, like the inspo build (5 per lesson attempt)
+  useEffect(() => {
+    setHearts(5);
+    setMistakes(0);
+    setStepIndex(0);
+  }, [lessonIndex]);
+
+  function advance(ok?: boolean) {
+    if (ok === false) {
+      setHearts((h) => Math.max(0, h - 1));
+      setMistakes((m) => m + 1);
+    }
+    setStepIndex((i) => i + 1);
   }
 
-  /*
-    =========================
-    GAME WRONG
-    =========================
-  */
-  function handleGameWrong(wrongIndexes: Set<number>) {
-    setHearts((previous) => Math.max(previous - 1, 0));
-
-    setSelectedIndex(null);
-
-    setTimeout(() => {
-      setGameAnswers((previous) =>
-        previous.map((answer, index) =>
-          wrongIndexes.has(index) ? null : answer,
-        ),
-      );
-
-      setWrongAnswers(new Set());
-    }, 650);
-  }
-
-  /*
-    NEXT VERSE
-  */
   function handleNextVerse() {
-    const isLastLesson = lessonIndex === lessons.length - 1;
+    setScore((s) => s + 1);
 
-    if (isLastLesson) {
+    const isLast = lessonIndex === lessons.length - 1;
+    if (isLast) {
       localStorage.setItem("level1Completed", "true");
-
-      setScreen("complete");
+      setIsLevelComplete(true);
       return;
     }
 
-    setLessonIndex((previous) => previous + 1);
-
-    setLineIndex(0);
-    setSelectedWord(null);
-
-    setSelectedIndex(null);
-    setGameAnswers([]);
-
-    setLockedAnswers(new Set());
-    setWrongAnswers(new Set());
-
-    setFillAnswer(null);
-    setFillResult(null);
-
-    setScreen("story");
+    setLessonIndex((i) => i + 1);
   }
 
-  /*
-    GAME TEXT
-  */
-  const gameTitle =
-    gameType === "rebuild"
-      ? "Rebuild the line"
-      : gameType === "match"
-        ? "Match the meanings"
-        : "Fill in the missing word";
-
-  const gameInstruction =
-    gameType === "rebuild"
-      ? "Choose the Sanskrit words and place them in the correct order."
-      : gameType === "match"
-        ? "Tap a meaning, then choose its matching Sanskrit word."
-        : "Choose the Sanskrit word that correctly completes the line.";
+  const stepCounts = useMemo(() => lessons.map(countStepsForLesson), [lessons]);
+  const totalSteps = stepCounts.reduce((a, b) => a + b, 0);
+  const completedBefore = stepCounts.slice(0, lessonIndex).reduce((a, b) => a + b, 0);
+  const currentStep = completedBefore + Math.min(stepIndex, steps.length);
+  const progress = totalSteps > 0 ? Math.min((currentStep / totalSteps) * 100, 100) : 0;
 
   if (!lesson) {
     return (
@@ -535,28 +795,20 @@ export default function LevelOnePage() {
     );
   }
 
-  /*
-    COMPLETE
-  */
-  if (screen === "complete") {
+  if (isLevelComplete) {
     return (
       <main className={styles.game}>
         <section className={styles.completeScreen}>
           <div className={styles.completeIcon}>🏹</div>
-
           <p className={styles.completeLabel}>SECTION COMPLETE</p>
-
           <h1>Well done!</h1>
-
           <p className={styles.completeText}>
             You completed this section of Chapter 1.
           </p>
-
           <div className={styles.scoreCard}>
-            <span>Games completed</span>
+            <span>Verses learned</span>
             <strong>{score}</strong>
           </div>
-
           <Link href="/" className={styles.completeButton}>
             CONTINUE JOURNEY
           </Link>
@@ -564,6 +816,9 @@ export default function LevelOnePage() {
       </main>
     );
   }
+
+  const verseDone = stepIndex >= steps.length;
+  const step = steps[stepIndex];
 
   return (
     <main className={styles.game}>
@@ -573,412 +828,106 @@ export default function LevelOnePage() {
         </Link>
 
         <div className={styles.progressTrack}>
-          <div
-            className={styles.progress}
-            style={{
-              width: `${progress}%`,
-            }}
-          />
+          <div className={styles.progress} style={{ width: `${progress}%` }} />
         </div>
 
         <div className={styles.gameStats}>
           <span className={styles.hearts}>❤️ {hearts}</span>
-
           <span className={styles.counter}>{lesson.ref}</span>
         </div>
       </header>
 
       <section className={styles.content}>
-        {/* STORY */}
-
-        {screen === "story" && (
+        {verseDone ? (
           <>
-            <div className={styles.sectionPill}>VERSE {lesson.ref}</div>
+            <div className={`${styles.feedbackBox} ${styles.correctFeedback}`}>
+              <h2>{mistakes === 0 ? "Flawless!" : "Verse complete"}</h2>
+              <p>
+                {mistakes === 0
+                  ? "You got every part right."
+                  : "You mastered this verse."}
+              </p>
+            </div>
 
-            <p className={styles.screenType}>LEARN</p>
-
-            <h1>{lesson.title}</h1>
-
-            <div className={styles.storyBox}>
-              <div className={styles.boxIcon}>📖</div>
-
-              <p>{lesson.story}</p>
+            <div className={styles.verseBox} style={{ marginTop: 20 }}>
+              {lines.map((line, i) => (
+                <p key={i} className={styles.sanskritText}>
+                  {line.text}
+                </p>
+              ))}
             </div>
 
             <div className={styles.meaningBox}>
               <span>WHAT IT MEANS</span>
-
               <p>{lesson.meaning}</p>
-            </div>
-
-            <button
-              className={styles.actionButton}
-              onClick={handleContinueStory}
-            >
-              CONTINUE
-            </button>
-          </>
-        )}
-
-        {/* LINE BY LINE LEARNING */}
-
-        {screen === "line" && (
-          <>
-            <div className={styles.sectionPill}>VERSE {lesson.ref}</div>
-
-            <p className={styles.screenType}>WORD BY WORD</p>
-
-            <h1>{lesson.title}</h1>
-
-            <div key={lineIndex} className={styles.verseBox}>
-              {currentLine ? (
-                <>
-                  <div className={styles.lineCounter}>
-                    LINE {lineIndex + 1} OF {lines.length}
-                  </div>
-
-                  <p className={styles.sanskritText}>{currentLine.text}</p>
-
-                  <p className={styles.tapHint}>
-                    Tap a word to discover its meaning
-                  </p>
-
-                  <div className={styles.wordGrid}>
-                    {currentLine.words.map((word) => (
-                      <button
-                        key={word.s}
-                        className={`${styles.wordButton} ${
-                          selectedWord?.s === word.s ? styles.wordSelected : ""
-                        }`}
-                        onClick={() => setSelectedWord(word)}
-                      >
-                        {word.s}
-                      </button>
-                    ))}
-                  </div>
-
-                  {selectedWord && (
-                    <div className={styles.wordMeaning}>
-                      <span className={styles.meaningWord}>
-                        {selectedWord.s}
-                      </span>
-
-                      <span className={styles.meaningTranslation}>
-                        {selectedWord.g}
-                      </span>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <p className={styles.tapHint}>No Sanskrit line was found.</p>
-              )}
-            </div>
-
-            <button
-              className={styles.actionButton}
-              disabled={!selectedWord}
-              onClick={handleContinueLine}
-            >
-              {lineIndex === lines.length - 1 ? "CONTINUE" : "NEXT LINE"}
-            </button>
-          </>
-        )}
-
-        {/* PRO TIP */}
-
-        {screen === "tip" && (
-          <div className={styles.proTipPopup}>
-            <div className={styles.proTipPopupTop}>
-              <div className={styles.tipIcon}>💡</div>
-
-              <div>
-                <p className={styles.proTipEyebrow}>VERSE {lesson.ref}</p>
-
-                <h1>Pro Tip</h1>
-              </div>
-            </div>
-
-            <div className={styles.proTipContent}>
-              <p className={styles.proTipText}>
-                {lesson.proTip ??
-                  lesson.teaching ??
-                  "Look closely at how each Sanskrit word contributes to the meaning of the verse."}
-              </p>
-
-              {lesson.apply && (
-                <div className={styles.proTipApply}>
-                  <span>TRY THIS</span>
-
-                  <p>{lesson.apply}</p>
-                </div>
-              )}
-            </div>
-
-            <button
-              className={`${styles.actionButton} ${styles.proTipButton}`}
-              onClick={startGame}
-            >
-              TEST YOURSELF
-            </button>
-          </div>
-        )}
-
-        {/* SINGLE GAME */}
-
-        {screen === "game" && (
-          <>
-            <div className={styles.sectionPill}>TEST YOURSELF</div>
-
-            <p className={styles.screenType}>
-              {gameType === "rebuild"
-                ? "REBUILD"
-                : gameType === "match"
-                  ? "MATCH"
-                  : "FILL THE BLANK"}
-            </p>
-
-            <h1>{gameTitle}</h1>
-
-            <p className={styles.tapHint}>{gameInstruction}</p>
-
-            {/* REBUILD */}
-            {/* REBUILD */}
-
-            {gameType === "rebuild" && (
-              <>
-                <div className={styles.rebuildSlots}>
-                  {gameWords.map((word, index) => {
-                    const answer = gameAnswers[index];
-
-                    const isLocked = lockedAnswers.has(index);
-
-                    const isWrong = wrongAnswers.has(index);
-
-                    const isEmpty = answer === null;
-
-                    const isWordSelected = selectedIndex !== null;
-
-                    return (
-                      <button
-                        key={`${word.s}-${index}`}
-                        disabled={isLocked || isWrong}
-                        className={`${styles.rebuildSlot} ${
-                          isEmpty ? styles.empty : styles.filled
-                        } ${
-                          isEmpty && isWordSelected ? styles.available : ""
-                        } ${isLocked ? styles.correctMeaning : ""} ${
-                          isWrong ? styles.wrongMeaning : ""
-                        }`}
-                        onClick={() => handleRebuildSlotClick(index)}
-                      >
-                        {answer && (
-                          <span className={styles.landedSanskrit}>
-                            {answer}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* KEEP YOUR EXISTING WORD BANK BELOW */}
-                <div
-                  className={styles.wordGrid}
-                  style={{
-                    marginTop: "24px",
-                  }}
-                >
-                  {shuffledGameWords.map((word, index) => {
-                    const used = gameAnswers.includes(word.s);
-
-                    return (
-                      <button
-                        key={word.s}
-                        disabled={used}
-                        className={`${styles.wordButton} ${
-                          selectedIndex === index ? styles.wordSelected : ""
-                        } ${used ? styles.matchedWord : ""}`}
-                        onClick={() => handleRebuildWordClick(word.s)}
-                      >
-                        {word.s}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  className={styles.actionButton}
-                  disabled={
-                    gameAnswers.some((answer) => answer === null) ||
-                    wrongAnswers.size > 0
-                  }
-                  onClick={checkRebuildGame}
-                >
-                  CHECK
-                </button>
-              </>
-            )}
-
-            {/* MATCH */}
-
-            {gameType === "match" && (
-              <>
-                <div
-                  className={styles.options}
-                  style={{
-                    marginTop: "24px",
-                  }}
-                >
-                  {gameWords.map((word, index) => {
-                    const answer = gameAnswers[index];
-
-                    const isLocked = lockedAnswers.has(index);
-
-                    const isWrong = wrongAnswers.has(index);
-
-                    return (
-                      <button
-                        key={`${word.g}-${index}`}
-                        disabled={isLocked || isWrong}
-                        className={`${styles.option} ${
-                          selectedIndex === index ? styles.selected : ""
-                        } ${isLocked ? styles.correctMeaning : ""} ${
-                          isWrong ? styles.wrongMeaning : ""
-                        }`}
-                        onClick={() => handleMatchMeaningClick(index)}
-                      >
-                        <span className={styles.englishMeaning}>{word.g}</span>
-
-                        {answer && (
-                          <span className={styles.landedSanskrit}>
-                            {answer}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div
-                  className={styles.wordGrid}
-                  style={{
-                    marginTop: "24px",
-                  }}
-                >
-                  {shuffledGameWords.map((word) => {
-                    const used = gameAnswers.includes(word.s);
-
-                    return (
-                      <button
-                        key={word.s}
-                        disabled={used || selectedIndex === null}
-                        className={`${styles.wordButton} ${
-                          used ? styles.matchedWord : ""
-                        }`}
-                        onClick={() => handleMatchSanskritClick(word.s)}
-                      >
-                        {word.s}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <button
-                  className={styles.actionButton}
-                  disabled={
-                    gameAnswers.some((answer) => answer === null) ||
-                    wrongAnswers.size > 0
-                  }
-                  onClick={checkMatchGame}
-                >
-                  CHECK
-                </button>
-              </>
-            )}
-
-            {/* FILL THE BLANK */}
-
-            {gameType === "fill" && fillTarget && (
-              <>
-                <div
-                  className={styles.verseBox}
-                  style={{
-                    marginTop: "24px",
-                  }}
-                >
-                  <p className={styles.sanskritText}>
-                    {gameWords
-                      .map((word, index) =>
-                        index === fillTargetIndex ? "‎ " : word.s,
-                      )
-                      .join(" ")}
-                  </p>
-
-                  <div className={styles.wordMeaning}>
-                    <span className={styles.meaningTranslation}>
-                      Hint: {fillTarget.g}
-                    </span>
-                  </div>
-                </div>
-
-                <div
-                  className={styles.wordGrid}
-                  style={{
-                    marginTop: "24px",
-                  }}
-                >
-                  {fillOptions.map((word) => {
-                    const selected = fillAnswer === word.s;
-
-                    const isCorrect = selected && fillResult === true;
-
-                    const isWrong = selected && fillResult === false;
-
-                    return (
-                      <button
-                        key={word.s}
-                        disabled={fillAnswer !== null}
-                        className={`${styles.wordButton} ${
-                          isCorrect ? styles.matchedWord : ""
-                        } ${isWrong ? styles.wrongMeaning : ""}`}
-                        onClick={() => handleFillAnswer(word.s)}
-                      >
-                        {word.s}
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </>
-        )}
-
-        {/* FEEDBACK */}
-
-        {screen === "feedback" && (
-          <>
-            <div className={`${styles.feedbackBox} ${styles.correctFeedback}`}>
-              <div className={styles.feedbackIcon}>✓</div>
-
-              <h1>Perfect!</h1>
-
-              <p>You completed this challenge correctly.</p>
-            </div>
-
-            <div
-              className={styles.verseBox}
-              style={{
-                marginTop: "20px",
-              }}
-            >
-              <p className={styles.tapHint}>The line you just practiced</p>
-
-              <p className={styles.sanskritText}>{gameLine.text}</p>
             </div>
 
             <button className={styles.actionButton} onClick={handleNextVerse}>
               NEXT VERSE
             </button>
+          </>
+        ) : (
+          <>
+            {step.type === "intro" && (
+              <Intro
+                key={stepIndex}
+                lesson={lesson}
+                lines={teachableLines}
+                speakerLine={speakerLine}
+                onDone={() => advance()}
+              />
+            )}
+
+            {step.type === "learn" && (
+              <LearnPart
+                key={stepIndex}
+                line={teachableLines[step.line]}
+                part={step.line + 1}
+                total={teachableLines.length}
+                onDone={() => advance()}
+              />
+            )}
+
+            {step.type === "rebuild" && (
+              <Arrange
+                key={stepIndex}
+                words={teachableLines[step.line].words}
+                prompt={
+                  teachableLines.length > 1
+                    ? `Rebuild part ${step.line + 1} of ${teachableLines.length}`
+                    : "Rebuild the line"
+                }
+                hint={lesson.meaning}
+                onContinue={advance}
+              />
+            )}
+
+            {step.type === "match" && (
+              <MatchPairs
+                key={stepIndex}
+                words={teachableLines.flatMap((l) => l.words)}
+                onContinue={advance}
+              />
+            )}
+
+            {step.type === "fill" && (
+              <FillBlank
+                key={stepIndex}
+                lines={teachableLines}
+                fillLineIndex={fillLineIndex}
+                onContinue={advance}
+              />
+            )}
+
+            {step.type === "master" && (
+              <Arrange
+                key={stepIndex}
+                words={teachableLines.flatMap((l) => l.words)}
+                prompt="Now — the whole verse"
+                hint={lesson.title}
+                onContinue={advance}
+              />
+            )}
           </>
         )}
       </section>
