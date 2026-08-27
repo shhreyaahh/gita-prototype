@@ -206,11 +206,27 @@ export default function LevelOnePage() {
     setScreen("rebuild");
   }
 
-  function handleMeaningClick(index: number) {
-    if (lockedAnswers.has(index)) return;
+ function handleMeaningClick(index: number) {
+  // Correct/locked answers cannot be changed
+  if (lockedAnswers.has(index)) return;
 
-    setSelectedMeaningIndex(index);
+  // If this block already has a Sanskrit word,
+  // clicking it removes the word and returns it
+  // to the Sanskrit choices below.
+  if (rebuildAnswers[index] !== null) {
+    setRebuildAnswers((previous) => {
+      const updated = [...previous];
+      updated[index] = null;
+      return updated;
+    });
+
+    setSelectedMeaningIndex(null);
+    return;
   }
+
+  // Otherwise select this empty English meaning block
+  setSelectedMeaningIndex(index);
+}
 
   function handleSanskritClick(word: string) {
     if (selectedMeaningIndex === null) return;
