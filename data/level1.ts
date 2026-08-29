@@ -1,72 +1,106 @@
 export const level1 = [
- {
-  id: 1,
-  ref: "1.1",
-  title: "The Opening Question",
+  {
+    id: 1,
+    ref: "1.1",
+    title: "The Opening Question",
 
-  story:
-    "Dhritarashtra cannot see the battlefield himself. As the armies gather at Kurukshetra, he asks Sanjaya what is happening.",
+    story:
+      "Dhritarashtra cannot see the battlefield himself. As the armies gather at Kurukshetra, he asks Sanjaya what is happening.",
 
-  meaning:
-    "Dhritarashtra asks Sanjaya to describe what his sons and the sons of Pandu are doing on the battlefield of Kurukshetra.",
+    meaning:
+      "Dhritarashtra asks Sanjaya to describe what his sons and the sons of Pandu are doing on the battlefield of Kurukshetra.",
 
-  teaching:
-    "The Gita begins with a question. Before we understand the battle, we are invited to notice the perspective from which the question is being asked.",
+    teaching:
+      "The Gita begins with a question. Before we understand the battle, we are invited to notice the perspective from which the question is being asked.",
 
-  apply:
-    "When facing a difficult situation, pause and ask: What am I assuming before I truly understand what is happening?",
+    apply:
+      "When facing a difficult situation, pause and ask: What am I assuming before I truly understand what is happening?",
 
-  lines: [
-    {
-      text:
-        "dhṛtarāṣṭra uvāca",
-      words: [
-        { s: "dhṛtarāṣṭraḥ", g: "Dhritarashtra" },
-        { s: "uvāca", g: "said" },
-      ],
-    },
-    {
-      text:
-        "dharma-kṣetre kuru-kṣetre samavetā yuyutsavaḥ",
-      words: [
-        { s: "dharma-kṣetre", g: "in the field of dharma" },
-        { s: "kuru-kṣetre", g: "in Kurukshetra" },
-        { s: "samavetāḥ", g: "assembled together" },
-        { s: "yuyutsavaḥ", g: "desiring to fight" },
-      ],
-    },
-    {
-      text:
-        "māmakāḥ pāṇḍavāś caiva kim akurvata sañjaya",
-      words: [
-        { s: "māmakāḥ", g: "my sons" },
-        { s: "pāṇḍavāḥ", g: "the sons of Pandu" },
-        { s: "ca", g: "and" },
-        { s: "eva", g: "indeed" },
-        { s: "kim", g: "what" },
-        { s: "akurvata", g: "did they do" },
-        { s: "sañjaya", g: "O Sanjaya" },
-      ],
-    },
-  ],
+    proTip:
+      'Words ending in -e like kṣhetre are saptamī vibhakti (locative): “in/at the field”. Think: “-e = where?”',
 
-  proTip:
-    "Words ending in -e like kṣetre can show location: 'in' or 'at' a place. Think: where?",
+    grammarTip:
+      'Sandhi alert: “पाण्डवाश्चैव” = पाण्डवाः + च + एव. When a visarga (ः) comes before च, it often becomes श् → पाण्डवाश्च.',
 
-  test: {
-    question:
-      "Who asks Sanjaya what is happening on the battlefield?",
-    options: [
-      "Arjuna",
-      "Dhritarashtra",
-      "Duryodhana",
-      "Krishna",
+    lines: [
+      {
+        text: "dhṛtarāṣṭra uvāca",
+        words: [
+          {
+            s: "dhṛtarāṣṭraḥ",
+            g: "King Dhritarashtra",
+          },
+          {
+            s: "uvāca",
+            g: "said",
+          },
+        ],
+      },
+
+      {
+        text:
+          "dharma-kṣetre kuru-kṣetre samavetā yuyutsavaḥ",
+        words: [
+          {
+            s: "dharma-kṣetre",
+            g: "in the field of dharma (righteousness)",
+          },
+          {
+            s: "kuru-kṣetre",
+            g: "in the place called Kurukshetra",
+          },
+          {
+            s: "samavetāḥ",
+            g: "assembled, gathered together",
+          },
+          {
+            s: "yuyutsavaḥ",
+            g: "desirous of fighting",
+          },
+        ],
+      },
+
+      {
+        text:
+          "māmakāḥ pāṇḍavāś caiva kim akurvata sañjaya",
+        words: [
+          {
+            s: "māmakāḥ",
+            g: "my people (my sons, the Kauravas)",
+          },
+          {
+            s: "pāṇḍavāḥ",
+            g: "the sons of Pandu",
+          },
+          {
+            s: "ca eva",
+            g: "and also",
+          },
+          {
+            s: "kim",
+            g: "what",
+          },
+          {
+            s: "akurvata",
+            g: "did they do",
+          },
+          {
+            s: "sañjaya",
+            g: "O Sanjaya",
+          },
+        ],
+      },
     ],
-    correctAnswer: "Dhritarashtra",
-    explanation:
-      "The Bhagavad Gita opens with Dhritarashtra asking Sanjaya what is happening at Kurukshetra.",
+
+    fullSanskrit:
+      "धृतराष्ट्र उवाच। धर्मक्षेत्रे कुरुक्षेत्रे समवेता युयुत्सवः। मामकाः पाण्डवाश्चैव किमकुर्वत सञ्जय ||१||",
+
+    transliteration:
+      "dhṛtarāṣṭra uvāca — dharma-kṣetre kuru-kṣetre samavetā yuyutsavaḥ, māmakāḥ pāṇḍavāś caiva kim akurvata sañjaya.",
+
+    translation:
+      "Dhritarashtra said: Assembled on the sacred field of Kurukshetra, eager to fight, what did my sons and the sons of Pandu do? O Sanjaya.",
   },
-},
 
   {
     id: 2,
@@ -85,27 +119,80 @@ export const level1 = [
     meaning:
       "Duryodhana sees the Pandava army arranged in battle formation and approaches Drona to speak about it.",
 
+    proTip:
+      'Grammar Tip: Gerund (-tvā): dṛiṣhṭvā = “having seen”. Verbs with -tvā show a completed action before the main verb: “having seen… he spoke”.',
+
+    grammarTip:
+      'Compound word: pāṇḍava-anīkam → pāṇḍavānīkam (sandhi: a + a → ā). It means “the army of the Pandavas”.',
+
     lines: [
       {
-        text: "dṛṣṭvā tu pāṇḍavānīkaṁ vyūḍhaṁ duryodhanas tadā",
+        text:
+          "dṛṣṭvā tu pāṇḍavānīkaṁ vyūḍhaṁ duryodhanas tadā",
         words: [
-          { s: "dṛṣṭvā", g: "having seen" },
-          { s: "pāṇḍava-anīkam", g: "the Pandava army" },
-          { s: "vyūḍham", g: "arranged in formation" },
-          { s: "duryodhanaḥ", g: "Duryodhana" },
+          {
+            s: "dṛiṣhṭvā",
+            g: "on seeing",
+          },
+          {
+            s: "tu",
+            g: "but / and",
+          },
+          {
+            s: "pāṇḍava-anīkam",
+            g: "the army of the Pandavas",
+          },
+          {
+            s: "vyūḍham",
+            g: "arrayed in military formation",
+          },
+          {
+            s: "duryodhanaḥ",
+            g: "King Duryodhana",
+          },
+          {
+            s: "tadā",
+            g: "then",
+          },
         ],
       },
+
       {
-        text: "ācāryam upasaṅgamya rājā vacanam abravīt",
+        text:
+          "ācāryam upasaṅgamya rājā vacanam abravīt",
         words: [
-          { s: "ācāryam", g: "the teacher" },
-          { s: "upasaṅgamya", g: "having approached" },
-          { s: "rājā", g: "the king" },
-          { s: "vacanam", g: "words" },
-          { s: "abravīt", g: "spoke" },
+          {
+            s: "āchāryam",
+            g: "the teacher (Drona)",
+          },
+          {
+            s: "upasaṅgamya",
+            g: "approaching",
+          },
+          {
+            s: "rājā",
+            g: "the king",
+          },
+          {
+            s: "vachanam",
+            g: "words",
+          },
+          {
+            s: "abravīt",
+            g: "spoke",
+          },
         ],
       },
     ],
+
+    fullSanskrit:
+      "सञ्जय उवाच। दृष्ट्वा तु पाण्डवानीकं व्यूढं दुर्योधनस्तदा। आचार्यमुपसङ्गम्य राजा वचनमब्रवीत्।।",
+
+    transliteration:
+      "sañjaya uvāca — dṛṣṭvā tu pāṇḍavānīkaṁ vyūḍhaṁ duryodhanas tadā, ācāryam upasaṅgamya rājā vacanam abravīt.",
+
+    translation:
+      "Sanjaya said: On seeing the army of the Pandavas arrayed in battle formation, King Duryodhana then approached his teacher Drona and spoke these words.",
   },
 
   {
@@ -125,35 +212,86 @@ export const level1 = [
     meaning:
       "Duryodhana tells Drona to look at the mighty Pandava army, arranged by the son of Drupada.",
 
+    proTip:
+      'Grammar Tip: Possession with -ānām: putrāṇām = “of the sons” (ṣaṣṭhī vibhakti, genitive). Pattern: many plural genitives end in -ānām.',
+
+    grammarTip:
+      'Addressing someone: āchārya here is sambodhana (calling/vocative): “O teacher!” Often looks like the base form.',
+
     lines: [
       {
-        text: "paśyaitāṁ pāṇḍu-putrāṇām ācārya mahatīṁ camūm",
+        text:
+          "paśyaitāṁ pāṇḍu-putrāṇām ācārya mahatīṁ camūm",
         words: [
-          { s: "paśya", g: "look" },
-          { s: "etām", g: "at this" },
-          { s: "pāṇḍu-putrāṇām", g: "of the sons of Pandu" },
-          { s: "ācārya", g: "O teacher" },
-          { s: "mahatīm", g: "great" },
-          { s: "camūm", g: "army" },
+          {
+            s: "paśhya",
+            g: "behold",
+          },
+          {
+            s: "etām",
+            g: "this",
+          },
+          {
+            s: "pāṇḍu-putrāṇām",
+            g: "of the sons of Pandu",
+          },
+          {
+            s: "āchārya",
+            g: "O teacher",
+          },
+          {
+            s: "mahatīm",
+            g: "great",
+          },
+          {
+            s: "chamūm",
+            g: "army",
+          },
         ],
       },
+
       {
-        text: "vyūḍhāṁ drupada-putreṇa tava śiṣyeṇa dhīmatā",
+        text:
+          "vyūḍhāṁ drupada-putreṇa tava śiṣyeṇa dhīmatā",
         words: [
-          { s: "vyūḍhām", g: "arranged" },
-          { s: "drupada-putreṇa", g: "by the son of Drupada" },
-          { s: "tava", g: "your" },
-          { s: "śiṣyeṇa", g: "disciple" },
-          { s: "dhīmatā", g: "the intelligent one" },
+          {
+            s: "vyūḍhām",
+            g: "arranged",
+          },
+          {
+            s: "drupada-putreṇa",
+            g: "by the son of Drupada (Dhrishtadyumna)",
+          },
+          {
+            s: "tava",
+            g: "your",
+          },
+          {
+            s: "śhiṣhyeṇa",
+            g: "by the disciple",
+          },
+          {
+            s: "dhīmatā",
+            g: "intelligent",
+          },
         ],
       },
     ],
+
+    fullSanskrit:
+      "पश्यैतां पाण्डुपुत्राणामाचार्य महतीं चमूम्। व्यूढां द्रुपदपुत्रेण तव शिष्येण धीमता।।",
+
+    transliteration:
+      "paśya etāṁ pāṇḍu-putrāṇām ācārya mahatīṁ camūm, vyūḍhāṁ drupada-putreṇa tava śiṣyeṇa dhīmatā",
+
+    translation:
+      "Behold, O teacher, this mighty army of the sons of Pandu, arrayed for battle by your own intelligent disciple, the son of Drupada.",
   },
 
   {
     id: 4,
-    ref: "1.4–1.6",
-    title: "Counting the Opponents",
+    ref: "1.4",
+    title: "The Warriors",
 
     story:
       "Duryodhana begins listing the great warriors fighting for the Pandavas. One by one, powerful names enter the scene.",
@@ -165,178 +303,158 @@ export const level1 = [
       "Catch yourself when your mind starts making a list of everything that could go wrong.",
 
     meaning:
-      "Duryodhana names powerful Pandava warriors, including Bhima, Arjuna, Yuyudhana, Virata, Drupada, Abhimanyu and the sons of Draupadi.",
+      "Duryodhana names powerful Pandava warriors, including Bhima, Arjuna, Yuyudhana, Virata and Drupada.",
+
+    proTip:
+      'Grammar Tip: Compound equality: bhīma-arjuna-samāḥ = “similar/equal to Bhima and Arjuna”. Pattern: X-samāḥ = “like X”.',
+
+    grammarTip:
+      "Locative short form: yudhi = “in battle” (saptamī of yudh). Some locatives end in -i.",
 
     lines: [
       {
-        text: "atra śūrā maheṣv-āsā bhīmārjuna-samā yudhi",
+        text:
+          "atra śūrā maheṣv-āsā bhīmārjuna-samā yudhi",
         words: [
-          { s: "atra", g: "here" },
-          { s: "śūrāḥ", g: "heroes" },
-          { s: "maheṣv-āsāḥ", g: "great bowmen" },
-          { s: "bhīma-arjuna-samāḥ", g: "equal to Bhima and Arjuna" },
-          { s: "yudhi", g: "in battle" },
+          {
+            s: "atra",
+            g: "here",
+          },
+          {
+            s: "śhūrāḥ",
+            g: "heroes",
+          },
+          {
+            s: "maheṣhu-vāsāḥ",
+            g: "mighty archers",
+          },
+          {
+            s: "bhīma-arjuna-samāḥ",
+            g: "equal to Bhima and Arjuna",
+          },
+          {
+            s: "yudhi",
+            g: "in battle",
+          },
         ],
       },
+
       {
-        text: "yuyudhāno virāṭaś ca drupadaś ca mahā-rathaḥ",
+        text:
+          "yuyudhāno virāṭaś ca drupadaś ca mahā-rathaḥ",
         words: [
-          { s: "yuyudhānaḥ", g: "Yuyudhana" },
-          { s: "virāṭaḥ", g: "Virata" },
-          { s: "drupadaḥ", g: "Drupada" },
-          { s: "mahā-rathaḥ", g: "great chariot warrior" },
+          {
+            s: "yuyudhānaḥ",
+            g: "Yuyudhana (Satyaki)",
+          },
+          {
+            s: "virāṭaḥ",
+            g: "Virata",
+          },
+          {
+            s: "cha",
+            g: "and",
+          },
+          {
+            s: "drupadaḥ",
+            g: "Drupada",
+          },
+          {
+            s: "mahā-rathaḥ",
+            g: "great chariot-warrior",
+          },
         ],
       },
     ],
+
+    fullSanskrit:
+      "अत्र शूरा महेष्वासा भीमार्जुनसमा युधि। युयुधानो विराटश्च द्रुपदश्च महारथः।।",
+
+    transliteration:
+      "atra śūrā maheṣv-āsā bhīmārjuna-samā yudhi, yuyudhāno virāṭaś ca drupadaś ca mahā-rathaḥ",
+
+    translation:
+      "Here are heroes, mighty archers, equal in battle to Bhima and Arjuna — Yuyudhana, Virata, and Drupada, the great warrior.",
   },
 
   {
     id: 5,
-    ref: "1.7",
-    title: "Our Side Too",
+    ref: "1.5",
+    title: "More Great Warriors",
 
     story:
-      "After counting the warriors on the other side, Duryodhana turns to his own army. He now begins naming the leaders who stand with him.",
+      "Duryodhana continues naming the powerful warriors on the Pandava side.",
 
     teaching:
-      "After counting enemies, he counts friends aloud. Confidence that needs constant reassurance can sometimes hide anxiety.",
+      "The list continues to build a picture of the strength gathered on the battlefield.",
 
     apply:
-      "Real confidence does not always need a speech. Notice when you are seeking reassurance because you feel uncertain.",
+      "Notice how your mind reacts when a challenge seems to have more and more obstacles.",
 
     meaning:
-      "Duryodhana asks Drona to hear about the distinguished leaders of the Kaurava army.",
+      "Dhrishtaketu, Chekitana, the king of Kashi, Purujit, Kuntibhoja and Shaibya are named among the great warriors.",
+
+    proTip:
+      "Grammar Tip: Sandhi with च: धृष्टकेतुश्चेकितानः = धृष्टकेतुः + च + एकितानः → उः + च → उश्च. Visarga before च often becomes श्.",
+
+    grammarTip:
+      'Descriptive compound: nara-puṅgavaḥ = “bull among men” → “best of men”. Many honorifics are compounds like this.',
 
     lines: [
       {
-        text: "asmākaṁ tu viśiṣṭā ye tān nibodha dvijottama",
+        text:
+          "dhṛṣṭaketuś cekitānaḥ kāśirājaś ca vīryavān",
         words: [
-          { s: "asmākam", g: "our" },
-          { s: "viśiṣṭāḥ", g: "distinguished" },
-          { s: "tān", g: "them" },
-          { s: "nibodha", g: "know / hear of" },
-          { s: "dvijottama", g: "O best of the twice-born" },
+          {
+            s: "dhṛṣṭaketuḥ",
+            g: "Dhrishtaketu",
+          },
+          {
+            s: "cekitānaḥ",
+            g: "Chekitana",
+          },
+          {
+            s: "kāśirājaḥ ca",
+            g: "and the king of Kashi",
+          },
+          {
+            s: "vīryavān",
+            g: "heroic, powerful",
+          },
         ],
       },
+
       {
-        text: "nāyakā mama sainyasya saṁjñārthaṁ tān bravīmi te",
+        text:
+          "purujit kuntibhojaś ca śaibyaś ca nara-puṅgavaḥ",
         words: [
-          { s: "nāyakāḥ", g: "leaders" },
-          { s: "mama", g: "my" },
-          { s: "sainyasya", g: "of the army" },
-          { s: "bravīmi", g: "I speak / name" },
-          { s: "te", g: "to you" },
+          {
+            s: "purujit",
+            g: "Purujit",
+          },
+          {
+            s: "kuntibhojaḥ ca",
+            g: "and Kuntibhoja",
+          },
+          {
+            s: "śaibyaḥ ca",
+            g: "and Shaibya",
+          },
+          {
+            s: "nara-puṅgavaḥ",
+            g: "the best/foremost of men",
+          },
         ],
       },
     ],
-  },
 
-  {
-    id: 6,
-    ref: "1.8",
-    title: "The Champions of the Kauravas",
+    fullSanskrit:
+      "धृष्टकेतुश्चेकितानः काशिराजश्च वीर्यवान्। पुरुजित्कुन्तिभोजश्च शैब्यश्च नरपुङ्गवः।।",
 
-    story:
-      "Bhishma, Drona, Karna and others are named. Duryodhana surrounds himself, in words, with the strength of powerful figures.",
+    transliteration:
+      "dhṛṣṭaketuś cekitānaḥ kāśirājaś ca vīryavān, purujit kuntibhojaś ca śaibyaś ca nara-puṅgavaḥ",
 
-    teaching:
-      "People sometimes seek safety by surrounding themselves with powerful names, titles and allies.",
-
-    apply:
-      "Know the difference between being supported by others and using them as a shield against your own fear.",
-
-    meaning:
-      "Duryodhana names the great warriors fighting on the Kaurava side, including Drona, Bhishma, Karna and Kripa.",
-
-    lines: [
-      {
-        text: "bhavān bhīṣmaś ca karṇaś ca kṛpaś ca samitiñjayaḥ",
-        words: [
-          { s: "bhavān", g: "you" },
-          { s: "bhīṣmaḥ", g: "Bhishma" },
-          { s: "karṇaḥ", g: "Karna" },
-          { s: "kṛpaḥ", g: "Kripa" },
-          { s: "samitiñjayaḥ", g: "victorious in battle" },
-        ],
-      },
-      {
-        text: "aśvatthāmā vikarṇaś ca saumadattis tathaiva ca",
-        words: [
-          { s: "aśvatthāmā", g: "Ashvatthama" },
-          { s: "vikarṇaḥ", g: "Vikarna" },
-          { s: "saumadattiḥ", g: "the son of Somadatta" },
-        ],
-      },
-    ],
-  },
-
-  {
-    id: 7,
-    ref: "1.9",
-    title: "Ready to Give Their Lives",
-
-    story:
-      "Duryodhana continues. Many more warriors stand ready for his cause, prepared to risk their lives in battle.",
-
-    teaching:
-      "Once people become part of a conflict, individuals can disappear behind the cause they are serving.",
-
-    apply:
-      "Remember the human being behind every side, role and label.",
-
-    meaning:
-      "Duryodhana says that many other heroes are ready to give up their lives for his sake and are skilled in many kinds of weapons.",
-
-    lines: [
-      {
-        text: "anye ca bahavaḥ śūrā mad-arthe tyakta-jīvitāḥ",
-        words: [
-          { s: "anye", g: "others" },
-          { s: "bahavaḥ", g: "many" },
-          { s: "śūrāḥ", g: "heroes" },
-          { s: "mad-arthe", g: "for my sake" },
-          { s: "tyakta-jīvitāḥ", g: "ready to give up their lives" },
-        ],
-      },
-    ],
-  },
-
-  {
-    id: 8,
-    ref: "1.10",
-    title: "Enough or Not Enough?",
-
-    story:
-      "Duryodhana makes his final comparison. He measures the strength of both armies and declares his own side protected by Bhishma.",
-
-    teaching:
-      "Comparison rarely ends with certainty. Even after counting strengths, the mind can still ask: is this enough?",
-
-    apply:
-      "When you keep comparing, notice whether the comparison is actually giving you clarity—or feeding your anxiety.",
-
-    meaning:
-      "Duryodhana compares the two armies, describing his own force as protected by Bhishma and the Pandava force as protected by Bhima.",
-
-    lines: [
-      {
-        text: "aparyāptaṁ tad asmākaṁ balaṁ bhīṣmābhirakṣitam",
-        words: [
-          { s: "aparyāptam", g: "not sufficient / unlimited" },
-          { s: "asmākam", g: "our" },
-          { s: "balam", g: "strength / army" },
-          { s: "bhīṣma-abhirakṣitam", g: "protected by Bhishma" },
-        ],
-      },
-      {
-        text: "paryāptaṁ tv idam eteṣāṁ balaṁ bhīmābhirakṣitam",
-        words: [
-          { s: "paryāptam", g: "sufficient / limited" },
-          { s: "eteṣām", g: "of theirs" },
-          { s: "balam", g: "strength / army" },
-          { s: "bhīma-abhirakṣitam", g: "protected by Bhima" },
-        ],
-      },
-    ],
+    translation:
+      "Dhrishtaketu, Chekitana, and the valiant king of Kashi; Purujit, Kuntibhoja, and Shaibya, the best of men.",
   },
 ];
