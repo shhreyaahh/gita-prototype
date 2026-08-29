@@ -72,14 +72,8 @@ function isSpeakerLine(line: Line) {
   return line.words.length > 0 && line.words.length <= 2;
 }
 
-function countStepsForLesson(lesson: Lesson) {
-  const normalized: Line[] = (lesson.lines ?? []).map((line) => ({
-    text: line.text ?? line.t ?? "",
-    words: line.words ?? line.ws ?? [],
-  }));
-  const hasSpeakerLine = normalized.length > 1 && isSpeakerLine(normalized[0]);
-  const n = hasSpeakerLine ? normalized.length - 1 : normalized.length;
-  return 1 /* intro */ + 2 * n /* learn+rebuild per line */ + 3 /* match+fill+master */;
+function countStepsForLesson(_lesson: Lesson) {
+  return 6;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -96,74 +90,34 @@ function Intro({
   speakerLine: Line | null;
   onDone: () => void;
 }) {
-  const [flipped, setFlipped] = useState(false);
+  const words = lines.flatMap((line) => line.words);
 
   return (
     <>
-      <div className={styles.sectionPill}>VERSE {lesson.ref}</div>
-      <p className={styles.screenType}>THE WHOLE VERSE</p>
-      <h1>{lesson.title}</h1>
+      <div className={styles.sectionPill}>LEARN THE SHLOKA</div>
+      <p className={styles.screenType}>VERSE {lesson.ref}</p>
+      <h1>Read each Sanskrit word with its meaning</h1>
 
-      {!flipped ? (
-        <>
-          <div className={styles.verseBox}>
-            {speakerLine && (
-              <p className={styles.tapHint} style={{ fontStyle: "italic" }}>
-                {speakerLine.text}
-              </p>
-            )}
-            {lines.map((line, i) => (
-              <p key={i} className={styles.sanskritText}>
-                {line.text}
-              </p>
-            ))}
-          </div>
-
-          <div className={styles.meaningBox}>
-            <span>WHAT IT MEANS</span>
-            <p>{lesson.meaning}</p>
-          </div>
-        </>
-      ) : (
-        <div className={styles.proTipPopup}>
-          <div className={styles.proTipPopupTop}>
-            <div className={styles.tipIcon}>📖</div>
-            <div>
-              <p className={styles.proTipEyebrow}>VERSE {lesson.ref}</p>
-              <h1>The Story</h1>
-            </div>
-          </div>
-
-          <div className={styles.proTipContent}>
-            <p className={styles.proTipText}>{lesson.story}</p>
-
-            {lesson.teaching && (
-              <div className={styles.proTipApply} style={{ marginTop: 20 }}>
-                <span>THE TEACHING</span>
-                <p>{lesson.teaching}</p>
-              </div>
-            )}
-
-            {lesson.apply && (
-              <div className={styles.proTipApply}>
-                <span>FOR YOU, TODAY</span>
-                <p>{lesson.apply}</p>
-              </div>
-            )}
-          </div>
-        </div>
+      {speakerLine && (
+        <p className={styles.speakerLine}>{speakerLine.text}</p>
       )}
 
-      <button
-        className={styles.tapHint}
-        style={{ background: "none", border: "none", cursor: "pointer", display: "block" }}
-        onClick={() => setFlipped((f) => !f)}
-      >
-        {flipped ? "TAP TO RETURN ↻" : "TAP FOR THE STORY ↻"}
-      </button>
+      <div className={styles.wordMeaningTable}>
+        <div className={styles.wordMeaningHeader}>
+          <span>SANSKRIT</span>
+          <span>MEANING</span>
+        </div>
+
+        {words.map((word, i) => (
+          <div key={`${word.s}-${i}`} className={styles.wordMeaningRow}>
+            <div className={styles.wordMeaningSanskrit}>{word.s}</div>
+            <div className={styles.wordMeaningEnglish}>{word.g}</div>
+          </div>
+        ))}
+      </div>
 
       <button className={styles.actionButton} onClick={onDone}>
-        BREAK IT DOWN
+        CONTINUE
       </button>
     </>
   );
@@ -247,21 +201,34 @@ function Arrange({
   words,
   prompt,
   hint,
+  anchorIndices = [],
   onContinue,
 }: {
   words: Word[];
   prompt: string;
   hint: string;
+  anchorIndices?: number[];
   onContinue: (ok: boolean) => void;
 }) {
   const solution = useMemo(() => words.map((w) => w.s), [words]);
   const glosses = useMemo(() => words.map((w) => w.g), [words]);
   const N = words.length;
 
-  const preLocked = useMemo(
-    () => new Set(words.map((w, i) => (isConnector(w) ? i : -1)).filter((i) => i >= 0)),
-    [words],
-  );
+  const preLocked = useMemo(() => {
+    const locked = new Set<number>();
+
+    words.forEach((w, i) => {
+      if (isConnector(w)) locked.add(i);
+    });
+
+    anchorIndices.forEach((i) => {
+      if (i >= 0 && i < words.length && !isConnector(words[i])) {
+        locked.add(i);
+      }
+    });
+
+    return locked;
+  }, [words, anchorIndices]);
 
   const maxTries = Math.max(3, Math.ceil((N - preLocked.size) / 3));
 
@@ -377,7 +344,11 @@ function Arrange({
           </span>
         )}
       </div>
-      {hint && <p className={styles.tapHint}>&ldquo;{hint}&rdquo;</p>}
+      {hint && (
+        <p className={`${styles.tapHint} ${anchorIndices.length ? styles.masterHint : ""}`}>
+          {hint}
+        </p>
+      )}
 
       <div className={styles.rebuildSlots}>
         {slots.map((tile, i) => {
@@ -461,143 +432,112 @@ function MatchPairs({
   words: Word[];
   onContinue: (ok: boolean) => void;
 }) {
-  const subset = useMemo(() => {
-    const uniq: Word[] = [];
-    const seenS = new Set<string>();
-    const seenG = new Set<string>();
-
-    for (const w of shuffle(words.filter((w) => !isConnector(w)))) {
-      if (!seenS.has(w.s) && !seenG.has(w.g)) {
-        uniq.push(w);
-        seenS.add(w.s);
-        seenG.add(w.g);
-      }
-      if (uniq.length === 4) break;
-    }
-
-    return uniq;
-  }, [words]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const bank = useMemo(
-    () => shuffle(subset.map((w, i) => ({ id: i, text: w.s }))),
-    [subset],
+  const items = useMemo(
+    () => words.map((word, id) => ({ ...word, id })),
+    [words],
   );
 
-  const [answers, setAnswers] = useState<(string | null)[]>(() =>
-    Array(subset.length).fill(null),
+  const meanings = useMemo(
+    () => shuffle(items.map((item) => ({ id: item.id, text: item.g }))),
+    [items],
   );
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [locked, setLocked] = useState<Set<number>>(new Set());
+
+  const [selectedSanskrit, setSelectedSanskrit] = useState<number | null>(null);
+  const [matched, setMatched] = useState<Set<number>>(new Set());
   const [wrong, setWrong] = useState<Set<number>>(new Set());
 
-  function tapMeaning(i: number) {
-    if (locked.has(i) || wrong.has(i)) return;
-
-    if (answers[i]) {
-      setAnswers((prev) => {
-        const next = [...prev];
-        next[i] = null;
-        return next;
-      });
-      setSelectedIndex(null);
-      return;
-    }
-
-    setSelectedIndex(i);
+  function chooseSanskrit(id: number) {
+    if (matched.has(id)) return;
+    setWrong(new Set());
+    setSelectedSanskrit((current) => (current === id ? null : id));
   }
 
-  function tapWord(text: string) {
-    if (selectedIndex === null) return;
+  function chooseMeaning(id: number) {
+    if (matched.has(id) || selectedSanskrit === null) return;
 
-    setAnswers((prev) => {
-      const next = [...prev];
-      const existing = next.findIndex((a) => a === text);
-      if (existing !== -1 && existing !== selectedIndex && !locked.has(existing)) {
-        next[existing] = null;
+    if (id === selectedSanskrit) {
+      const next = new Set(matched);
+      next.add(id);
+      setMatched(next);
+      setSelectedSanskrit(null);
+
+      if (next.size === items.length) {
+        setTimeout(() => onContinue(true), 350);
       }
-      next[selectedIndex] = text;
-      return next;
-    });
-    setSelectedIndex(null);
-  }
-
-  function check() {
-    if (answers.some((a) => a === null)) return;
-
-    const correct = new Set(locked);
-    const wrongNow: number[] = [];
-
-    subset.forEach((w, i) => {
-      if (answers[i] === w.s) correct.add(i);
-      else if (!locked.has(i)) wrongNow.push(i);
-    });
-
-    if (correct.size === subset.length) {
-      setLocked(correct);
-      setTimeout(() => onContinue(true), 500);
       return;
     }
 
-    setLocked(correct);
-    setWrong(new Set(wrongNow));
-
+    setWrong(new Set([selectedSanskrit, id]));
     setTimeout(() => {
-      setAnswers((prev) => prev.map((a, i) => (wrongNow.includes(i) ? null : a)));
       setWrong(new Set());
-    }, 650);
+      setSelectedSanskrit(null);
+    }, 550);
   }
-
-  const filledAll = answers.every((a) => a !== null);
-  const usedTexts = new Set(answers.filter(Boolean) as string[]);
 
   return (
     <>
-      <div className={styles.sectionPill}>TEST YOURSELF</div>
+      <div className={styles.sectionPill}>EXERCISE 1</div>
       <p className={styles.screenType}>MATCH</p>
-      <h1>Match the meanings</h1>
-      <p className={styles.tapHint}>Tap a meaning, then tap its matching Sanskrit word.</p>
+      <h1>Match each word with its meaning</h1>
+      <p className={styles.tapHint}>
+        Tap a Sanskrit word, then tap its matching meaning.
+      </p>
 
-      <div className={styles.options}>
-        {subset.map((w, i) => {
-          const answer = answers[i];
-          const isLocked = locked.has(i);
-          const isWrong = wrong.has(i);
+      <div className={styles.wordMatchTable}>
+        <div className={styles.wordMatchHeader}>
+          <span>SANSKRIT</span>
+          <span>MEANING</span>
+        </div>
 
-          return (
-            <button
-              key={i}
-              disabled={isLocked}
-              onClick={() => tapMeaning(i)}
-              className={`${styles.option} ${selectedIndex === i ? styles.selected : ""} ${
-                answer ? styles.filledMeaning : ""
-              } ${isLocked ? styles.correctMeaning : ""} ${isWrong ? styles.wrongMeaning : ""}`}
-            >
-              <span className={styles.englishMeaning}>{w.g}</span>
-              {answer && <span className={styles.landedSanskrit}>{answer}</span>}
-            </button>
-          );
-        })}
+        <div className={styles.wordMatchColumns}>
+          <div className={styles.wordMatchColumn}>
+            {items.map((item) => {
+              const isMatched = matched.has(item.id);
+              const isSelected = selectedSanskrit === item.id;
+              const isWrong = wrong.has(item.id);
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  disabled={isMatched}
+                  onClick={() => chooseSanskrit(item.id)}
+                  className={`${styles.wordMatchButton} ${
+                    isSelected ? styles.matchSelected : ""
+                  } ${isMatched ? styles.matchCorrect : ""} ${
+                    isWrong ? styles.matchWrong : ""
+                  }`}
+                >
+                  {isMatched && <span className={styles.matchCheck}>✓</span>}
+                  {item.s}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className={styles.wordMatchColumn}>
+            {meanings.map((meaning) => {
+              const isMatched = matched.has(meaning.id);
+              const isWrong = wrong.has(meaning.id);
+
+              return (
+                <button
+                  key={meaning.id}
+                  type="button"
+                  disabled={isMatched || selectedSanskrit === null}
+                  onClick={() => chooseMeaning(meaning.id)}
+                  className={`${styles.wordMatchButton} ${
+                    isMatched ? styles.matchCorrect : ""
+                  } ${isWrong ? styles.matchWrong : ""}`}
+                >
+                  {isMatched && <span className={styles.matchCheck}>✓</span>}
+                  {meaning.text}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
-
-      <div className={styles.wordGrid} style={{ marginTop: 20 }}>
-        {bank.map((tile) => {
-          const used = usedTexts.has(tile.text);
-          return (
-            <button
-              key={tile.id}
-              disabled={used || selectedIndex === null}
-              onClick={() => tapWord(tile.text)}
-              className={`${styles.wordButton} ${used ? styles.matchedWord : ""}`}
-            >
-              {tile.text}
-            </button>
-          );
-        })}
-      </div>
-
-      <button className={styles.actionButton} disabled={!filledAll} onClick={check}>
-        CHECK
-      </button>
     </>
   );
 }
@@ -700,6 +640,323 @@ function FillBlank({
   );
 }
 
+
+function WordMeaningTable({ words }: { words: Word[] }) {
+  return (
+    <div className={styles.wordMeaningList}>
+      {words.filter((w) => !isConnector(w)).map((word, i) => (
+        <div className={styles.wordMeaningRow} key={`${word.s}-${i}`}>
+          <div className={styles.wordMeaningSanskrit}>{word.s}</div>
+          <div className={styles.wordMeaningEnglish}>{word.g}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HalfLearning({
+  words,
+  half,
+  onDone,
+}: {
+  words: Word[];
+  half: 1 | 2;
+  onDone: () => void;
+}) {
+  return (
+    <>
+      <div className={styles.sectionPill}>LEARN</div>
+      <p className={styles.screenType}>HALF {half} OF THE VERSE</p>
+      <h1>Learn the words</h1>
+      <WordMeaningTable words={words} />
+      <button className={styles.actionButton} onClick={onDone}>
+        CONTINUE
+      </button>
+    </>
+  );
+}
+
+function MatchWordMeanings({
+  words,
+  title,
+  onContinue,
+}: {
+  words: Word[];
+  title: string;
+  onContinue: (ok: boolean) => void;
+}) {
+  const content = useMemo(
+    () => words.filter((w) => !isConnector(w)),
+    [words],
+  );
+
+  const meanings = useMemo(
+    () => shuffle(content.map((word, originalIndex) => ({
+      text: word.g,
+      originalIndex,
+    }))),
+    [content],
+  );
+
+  const [selectedWord, setSelectedWord] = useState<number | null>(null);
+  const [matched, setMatched] = useState<Set<number>>(new Set());
+  const [wrong, setWrong] = useState<string | null>(null);
+
+  const sentence = content
+    .filter((_, i) => matched.has(i))
+    .map((word) => word.s)
+    .join(" ");
+
+  function selectMeaning(meaningIndex: number) {
+    if (selectedWord === null) return;
+
+    const correct = meanings[meaningIndex].originalIndex === selectedWord;
+
+    if (correct) {
+      const next = new Set(matched);
+      next.add(selectedWord);
+      setMatched(next);
+      setSelectedWord(null);
+
+      if (next.size === content.length) {
+        setTimeout(() => onContinue(true), 450);
+      }
+    } else {
+      setWrong(`${selectedWord}-${meaningIndex}`);
+      setTimeout(() => setWrong(null), 500);
+    }
+  }
+
+  return (
+    <>
+      <div className={styles.sectionPill}>TEST YOURSELF</div>
+      <p className={styles.screenType}>MATCH</p>
+      <h1>{title}</h1>
+      <p className={styles.tapHint}>
+        Match each Sanskrit word with its meaning.
+      </p>
+
+      <div className={styles.wordMatchGame}>
+        <div className={styles.wordMatchColumn}>
+          <div className={styles.matchColumnLabel}>SANSKRIT</div>
+          {content.map((word, i) => (
+            <button
+              key={`sanskrit-${i}`}
+              className={`${styles.wordMatchButton} ${
+                selectedWord === i ? styles.matchSelected : ""
+              } ${matched.has(i) ? styles.matchCorrect : ""}`}
+              disabled={matched.has(i)}
+              onClick={() => setSelectedWord(i)}
+            >
+              {word.s}
+            </button>
+          ))}
+        </div>
+
+        <div className={styles.wordMatchColumn}>
+          <div className={styles.matchColumnLabel}>MEANING</div>
+          {meanings.map((meaning, i) => {
+            const isMatched = matched.has(meaning.originalIndex);
+            const isWrong = wrong === `${selectedWord}-${i}`;
+
+            return (
+              <button
+                key={`meaning-${i}`}
+                className={`${styles.wordMatchButton} ${
+                  isWrong ? styles.matchWrong : ""
+                } ${isMatched ? styles.matchCorrect : ""}`}
+                disabled={isMatched}
+                onClick={() => selectMeaning(i)}
+              >
+                {meaning.text}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className={styles.sentenceBuild}>
+        <span>YOUR SENTENCE</span>
+        <p>{sentence || "Match words to build the sentence"}</p>
+      </div>
+    </>
+  );
+}
+
+function FillVerse({
+  words,
+  title,
+  hint,
+  onContinue,
+}: {
+  words: Word[];
+  title: string;
+  hint: string;
+  onContinue: (ok: boolean) => void;
+}) {
+  const content = useMemo(
+    () => words.filter((w) => !isConnector(w)),
+    [words],
+  );
+
+  // Keep three blanks for a short verse, otherwise use roughly 30–40%
+  // of the content words. Each blank shows its English meaning as a hint.
+  const blankIndexes = useMemo(() => {
+    if (content.length <= 3) return content.map((_, i) => i);
+
+    const count = Math.max(3, Math.ceil(content.length * 0.35));
+    const indexes = new Set<number>();
+
+    for (let i = 0; indexes.size < count && i < content.length; i += 1) {
+      const candidate = Math.round(
+        (i * (content.length - 1)) / Math.max(1, count - 1),
+      );
+      indexes.add(candidate);
+    }
+
+    return [...indexes].sort((a, b) => a - b);
+  }, [content]);
+
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [checked, setChecked] = useState<boolean | null>(null);
+
+  const wordBank = useMemo(
+    () =>
+      shuffle(
+        blankIndexes.map((i) => content[i]),
+      ),
+    [blankIndexes, content],
+  );
+
+  function chooseAnswer(word: Word) {
+    if (checked !== null) return;
+
+    const emptyIndex = blankIndexes.find(
+      (index) => !answers[index],
+    );
+
+    if (emptyIndex === undefined) return;
+
+    setAnswers((prev) => ({
+      ...prev,
+      [emptyIndex]: word.s,
+    }));
+  }
+
+  function clearAnswer(index: number) {
+    if (checked !== null) return;
+
+    setAnswers((prev) => {
+      const next = { ...prev };
+      delete next[index];
+      return next;
+    });
+  }
+
+  function check() {
+    const ok = blankIndexes.every(
+      (index) => answers[index] === content[index].s,
+    );
+    setChecked(ok);
+  }
+
+  return (
+    <>
+      <div className={styles.sectionPill}>TEST YOURSELF</div>
+      <p className={styles.screenType}>FILL THE BLANKS</p>
+      <h1>{title}</h1>
+
+      <p className={styles.masterHint}>{hint}</p>
+
+      <div className={styles.fillVerse}>
+        {content.map((word, i) => {
+          const isBlank = blankIndexes.includes(i);
+
+          if (!isBlank) {
+            return (
+              <span className={styles.fillWord} key={`${word.s}-${i}`}>
+                {word.s}
+              </span>
+            );
+          }
+
+          return (
+            <button
+              key={`${word.s}-${i}`}
+              className={`${styles.fillBlank} ${
+                answers[i] ? styles.fillBlankFilled : ""
+              } ${
+                checked !== null
+                  ? answers[i] === word.s
+                    ? styles.fillBlankCorrect
+                    : styles.fillBlankWrong
+                  : ""
+              }`}
+              disabled={checked !== null}
+              onClick={() => clearAnswer(i)}
+              title="Tap to remove your answer"
+            >
+              {answers[i] || `${word.g}`}
+            </button>
+          );
+        })}
+      </div>
+
+      <p className={styles.fillInstruction}>
+        Choose the Sanskrit word that completes each blank.
+      </p>
+
+      <div className={styles.fillWordBank}>
+        {wordBank.map((word) => {
+          const alreadyUsed = Object.values(answers).includes(word.s);
+
+          return (
+            <button
+              key={word.s}
+              className={styles.fillWordOption}
+              disabled={alreadyUsed || checked !== null}
+              onClick={() => chooseAnswer(word)}
+            >
+              {word.s}
+            </button>
+          );
+        })}
+      </div>
+
+      {checked === null ? (
+        <button
+          className={styles.actionButton}
+          disabled={blankIndexes.some((i) => !answers[i])}
+          onClick={check}
+        >
+          CHECK
+        </button>
+      ) : (
+        <>
+          <div
+            className={`${styles.feedbackBox} ${
+              checked ? styles.correctFeedback : styles.wrongFeedback
+            }`}
+          >
+            <h2>{checked ? "Correct!" : "Not quite"}</h2>
+            {!checked && (
+              <p>{content.map((word) => word.s).join(" ")}</p>
+            )}
+          </div>
+
+          <button
+            className={styles.actionButton}
+            onClick={() => onContinue(checked)}
+          >
+            CONTINUE
+          </button>
+        </>
+      )}
+    </>
+  );
+}
+
+
 /* ---------------------------------------------------------------------- */
 /* ROOT PAGE                                                              */
 /* ---------------------------------------------------------------------- */
@@ -735,22 +992,50 @@ export default function LevelOnePage() {
     [lines, speakerLine],
   );
 
-  const steps: Step[] = useMemo(() => {
-    const parts: Step[] = [];
-    teachableLines.forEach((_, i) => {
-      parts.push({ type: "learn", line: i });
-      parts.push({ type: "rebuild", line: i });
-    });
-    return [{ type: "intro" }, ...parts, { type: "match" }, { type: "fill" }, { type: "master" }];
-  }, [teachableLines]);
+  const wholeWords = useMemo(
+    () => teachableLines.flatMap((line) => line.words),
+    [teachableLines],
+  );
 
-  const fillLineIndex = useMemo(() => {
-    if (teachableLines.length === 0) return 0;
-    return teachableLines.reduce((best, line, i, arr) => {
-      const c = contentWords(line.words).length;
-      const bc = contentWords(arr[best].words).length;
-      return c > bc ? i : best;
-    }, 0);
+  const splitAt = Math.ceil(wholeWords.length / 2);
+
+  const firstHalfWords = useMemo(
+    () => wholeWords.slice(0, splitAt),
+    [wholeWords, splitAt],
+  );
+
+  const secondHalfWords = useMemo(
+    () => wholeWords.slice(splitAt),
+    [wholeWords, splitAt],
+  );
+
+  const steps: Step[] = useMemo(
+    () => [
+      { type: "learnHalf1" },
+      { type: "matchHalf1" },
+      { type: "learnHalf2" },
+      { type: "fillHalf2" },
+      { type: "matchWhole" },
+      { type: "fillWhole" },
+    ],
+    [],
+  );
+
+  // Whole-verse master: give the learner three anchors so the verse is
+  // challenging but not a completely blank wall.
+  const masterHintIndices = useMemo(() => {
+    const allWords = teachableLines.flatMap((line) => line.words);
+    const contentIndices = allWords
+      .map((word, i) => (isConnector(word) ? -1 : i))
+      .filter((i) => i >= 0);
+
+    if (contentIndices.length === 0) return [];
+
+    const first = contentIndices[0];
+    const middle = contentIndices[Math.floor((contentIndices.length - 1) / 2)];
+    const last = contentIndices[contentIndices.length - 1];
+
+    return [...new Set([first, middle, last])];
   }, [teachableLines]);
 
   // Hearts reset per verse, like the inspo build (5 per lesson attempt)
@@ -868,63 +1153,52 @@ export default function LevelOnePage() {
           </>
         ) : (
           <>
-            {step.type === "intro" && (
-              <Intro
-                key={stepIndex}
-                lesson={lesson}
-                lines={teachableLines}
-                speakerLine={speakerLine}
+            {step.type === "learnHalf1" && (
+              <HalfLearning
+                words={firstHalfWords}
+                half={1}
                 onDone={() => advance()}
               />
             )}
 
-            {step.type === "learn" && (
-              <LearnPart
-                key={stepIndex}
-                line={teachableLines[step.line]}
-                part={step.line + 1}
-                total={teachableLines.length}
+            {step.type === "matchHalf1" && (
+              <MatchWordMeanings
+                words={firstHalfWords}
+                title="Match the first half"
+                onContinue={advance}
+              />
+            )}
+
+            {step.type === "learnHalf2" && (
+              <HalfLearning
+                words={secondHalfWords}
+                half={2}
                 onDone={() => advance()}
               />
             )}
 
-            {step.type === "rebuild" && (
-              <Arrange
-                key={stepIndex}
-                words={teachableLines[step.line].words}
-                prompt={
-                  teachableLines.length > 1
-                    ? `Rebuild part ${step.line + 1} of ${teachableLines.length}`
-                    : "Rebuild the line"
-                }
+            {step.type === "fillHalf2" && (
+              <FillVerse
+                words={secondHalfWords}
+                title="Complete the second half"
                 hint={lesson.meaning}
                 onContinue={advance}
               />
             )}
 
-            {step.type === "match" && (
-              <MatchPairs
-                key={stepIndex}
-                words={teachableLines.flatMap((l) => l.words)}
+            {step.type === "matchWhole" && (
+              <MatchWordMeanings
+                words={wholeWords}
+                title="Match the whole verse"
                 onContinue={advance}
               />
             )}
 
-            {step.type === "fill" && (
-              <FillBlank
-                key={stepIndex}
-                lines={teachableLines}
-                fillLineIndex={fillLineIndex}
-                onContinue={advance}
-              />
-            )}
-
-            {step.type === "master" && (
-              <Arrange
-                key={stepIndex}
-                words={teachableLines.flatMap((l) => l.words)}
-                prompt="Now — the whole verse"
-                hint={lesson.title}
+            {step.type === "fillWhole" && (
+              <FillVerse
+                words={wholeWords}
+                title="Complete the whole verse"
+                hint={lesson.meaning}
                 onContinue={advance}
               />
             )}
