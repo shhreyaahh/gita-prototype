@@ -46,11 +46,13 @@ type Line = { text: string; words: Word[] };
 */
 type Step =
   | { type: "intro" }
-  | { type: "learn"; line: number }
-  | { type: "rebuild"; line: number }
-  | { type: "match" }
-  | { type: "fill" }
-  | { type: "master" };
+  | { type: "learnHalf1" }
+  | { type: "tips" }
+  | { type: "matchHalf1" }
+  | { type: "learnHalf2" }
+  | { type: "fillHalf2" }
+  | { type: "matchWhole" }
+  | { type: "fillWhole" };
 
 const isConnector = (w: Word) => !!w.fn;
 
