@@ -2596,3 +2596,203 @@
     font-size: 11px;
   }
 }
+
+
+/* Final six-page flow */
+.wordMeaningList{width:100%;margin-top:24px;border:2px solid #ded6ca;border-radius:16px;overflow:hidden;background:var(--surface)}
+.wordMeaningRow{display:grid;grid-template-columns:1fr 1fr;min-height:50px;border-bottom:1px solid #ded6ca}
+.wordMeaningRow:last-child{border-bottom:none}
+.wordMeaningSanskrit,.wordMeaningEnglish{display:flex;align-items:center;padding:11px 14px;line-height:1.4}
+.wordMeaningSanskrit{color:var(--purple);font-size:16px;font-weight:800;border-right:1px solid #ded6ca}
+.wordMeaningEnglish{color:var(--text);font-size:13px;font-weight:600}
+.wordMatchGame{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-top:24px}
+.wordMatchColumn{display:flex;flex-direction:column;gap:8px;min-width:0}
+.matchColumnLabel{margin-bottom:2px;color:var(--text-muted);font-size:10px;font-weight:900;letter-spacing:.1em}
+.wordMatchButton{width:100%;min-height:50px;padding:10px 12px;border:2px solid #ded6ca;border-radius:12px;background:var(--surface);color:var(--text);font-family:inherit;font-size:13px;font-weight:700;line-height:1.35;text-align:left;cursor:pointer;box-shadow:0 3px 0 #d7cabb;transition:transform .15s ease,background .15s ease,border-color .15s ease}
+.matchSelected{border-color:var(--purple);background:#eee3f7;color:var(--purple)}
+.matchCorrect{border-color:#74b77a!important;background:#dff2df!important;color:#2f7136!important}
+.matchWrong{border-color:#df7068!important;background:#ffe1df!important;color:#a63f39!important}
+.sentenceBuild{width:100%;margin-top:18px;padding:14px 16px;border-radius:14px;background:#f2f0ed;color:var(--text-muted)}
+.sentenceBuild span{display:block;margin-bottom:6px;font-size:10px;font-weight:900;letter-spacing:.1em}
+.sentenceBuild p{margin:0;color:var(--text);font-size:15px;font-weight:700;line-height:1.5}
+.masterHint{margin-top:10px;color:var(--text-muted);font-size:13px;font-weight:500;line-height:1.5}
+.fillInstruction{margin:14px 0 10px;color:var(--text-muted);font-size:12px;font-weight:600}
+.fillWordBank{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.fillWordOption{min-height:42px;padding:9px 13px;border:2px solid #ded6ca;border-radius:11px;background:var(--surface);color:var(--purple);font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 3px 0 #d7cabb}
+.fillBlank{display:inline-flex;align-items:center;justify-content:center;min-width:88px;min-height:38px;margin:0 5px 4px 0;padding:4px 9px;border:2px dashed #cdbb94;border-radius:9px;background:#fffaf0;color:var(--text-muted);font-family:inherit;font-size:12px;font-weight:700;vertical-align:middle;cursor:pointer}
+.fillBlankFilled{border-style:solid;border-color:var(--purple);background:#eee3f7;color:var(--purple)}
+
+
+/* =========================================================
+   AUDIO / PRONUNCIATION
+========================================================= */
+
+.wordMeaningSanskrit {
+  appearance: none;
+  width: 100%;
+  border: 0;
+  border-right: 1px solid #ded6ca;
+  border-radius: 0;
+  background: transparent;
+  color: var(--purple);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wordMeaningSanskrit:disabled {
+  cursor: default;
+}
+
+.wordAudioIcon {
+  display: inline-flex;
+  margin-right: 8px;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+.listenButton {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 2px solid #ded6ca;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--purple);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 3px 0 #d7cabb;
+}
+
+.listenButton:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #d7cabb;
+}
+
+@media (max-width: 380px) {
+  .wordMeaningSanskrit {
+    font-size: 14px;
+  }
+
+  .wordAudioIcon {
+    margin-right: 5px;
+    font-size: 11px;
+  }
+}
+
+
+/* =========================================================
+   ONE-TIME VERSE TIPS POPUP
+========================================================= */
+
+.tipOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px;
+  background: rgba(48, 35, 53, 0.28);
+  backdrop-filter: blur(3px);
+}
+
+.tipModal {
+  width: min(100%, 430px);
+  max-height: min(88vh, 620px);
+  overflow-y: auto;
+  padding: 22px;
+  border: 2px solid #ded6ca;
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 10px 0 rgba(79, 48, 92, 0.12);
+}
+
+.tipModalHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.tipModalIcon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 50%;
+  background: #eee3f7;
+  font-size: 22px;
+}
+
+.tipModalEyebrow {
+  margin: 0 0 3px;
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.tipModal h1 {
+  margin: 0;
+  font-size: 25px;
+}
+
+.tipModalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tipItem {
+  padding: 14px 15px;
+  border-radius: 13px;
+  background: #f2f0ed;
+}
+
+.tipItem span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--purple);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+
+.tipItem p {
+  margin: 0;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.tipModal .actionButton {
+  margin-top: 18px;
+}
+
+@media (max-width: 380px) {
+  .tipOverlay {
+    padding: 14px;
+  }
+
+  .tipModal {
+    padding: 18px;
+  }
+
+  .tipModal h1 {
+    font-size: 22px;
+  }
+}
+
+
+/* Pro Tip appears after the learning screen and before its exercise. */
+.tipModalEyebrow {
+  color: var(--purple);
+}
